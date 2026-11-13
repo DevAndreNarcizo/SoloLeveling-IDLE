@@ -2,7 +2,7 @@
 // O jogo roda sem nenhum arquivo: cada asset ausente vira um marcador desenhado por código.
 // Para usar a sua arte, salve o PNG em client/public/assets/<path>.
 
-export type AssetFormat = 'sheet' | 'image' | 'tile' | 'props' | 'fx' | 'icon' | 'wide'
+export type AssetFormat = 'sheet' | 'image' | 'tile' | 'map' | 'props' | 'fx' | 'icon' | 'wide'
 export interface AssetDef {
   id: string
   path: string // relativo a client/public/assets/
@@ -14,7 +14,7 @@ export interface AssetDef {
 }
 /** Grade de cada formato: colunas × linhas. O cliente divide a imagem por esses números, em qualquer resolução. */
 export const FORMAT_GRID: Record<AssetFormat, { cols: number; rows: number }> = {
-  sheet: { cols: 4, rows: 4 }, image: { cols: 1, rows: 1 }, tile: { cols: 1, rows: 1 }, props: { cols: 2, rows: 2 },
+  sheet: { cols: 4, rows: 4 }, image: { cols: 1, rows: 1 }, tile: { cols: 1, rows: 1 }, map: { cols: 1, rows: 1 }, props: { cols: 2, rows: 2 },
   fx: { cols: 2, rows: 2 }, icon: { cols: 1, rows: 1 }, wide: { cols: 1, rows: 1 },
 }
 
@@ -63,13 +63,13 @@ add('Chefes (opcionais)', 'image', 'monstros', [
   ['colosso-de-escoria', 'Colosso de Escória', 'a giant slag colossus with molten orange veins, one arm shaped like a hammer', true],
   ['serpe-matriarca', 'Serpe Matriarca', 'a large ash-grey wyvern matriarch with small folded wings, horned crest and glowing ember throat', true],
 ])
-add('Mapas: chão (textura contínua)', 'tile', 'mapas', [
-  ['cidade-chao', `Chão da cidade`, 'dark slate stone pavement of a modern city plaza at night, subtle violet reflections, occasional cracks'],
-  ['minas-ocas-chao', 'Chão das Minas Ocas', 'dark brown cave floor with gravel, rust stains and faint rail tracks marks'],
-  ['bosque-cinzento-chao', 'Chão do Bosque Cinzento', 'grey-green forest floor with dead leaves, moss patches and thin mist'],
-  ['cidadela-afundada-chao', 'Chão da Cidadela Afundada', 'wet cracked dark-teal stone tiles with shallow puddles and seaweed'],
-  ['forja-extinta-chao', 'Chão da Forja Extinta', 'black basalt foundry floor with soot, metal grates and thin glowing orange cracks'],
-  ['arena-chao', 'Chão da arena de promoção', 'clean dark grey training arena floor with faint white painted lines and violet edge lights'],
+add('Mapas (montados por tools/ai-assets/maps.py)', 'map', 'mapas', [
+  ['cidade', 'Mapa da cidade (Vértice)', 'night city plaza of hunters: dark slate pavement, a central emblem, roads to the four NPCs, violet street lamps, benches and notice boards near the edges'],
+  ['minas-ocas', 'Mapa das Minas Ocas', 'abandoned mine cave: brown rock floor, a winding rail track, rust stains, rock walls around, mine carts, wooden supports, ore piles and lanterns near the walls'],
+  ['bosque-cinzento', 'Mapa do Bosque Cinzento', 'misty forest clearing: grey-green forest floor, a dirt trail, moss patches, a ring of dense trees around, dead trees, mossy boulders, thorn bushes and fallen logs'],
+  ['cidadela-afundada', 'Mapa da Cidadela Afundada', 'sunken citadel courtyard: wet teal stone tiles, puddles, a cracked central path, ruined walls around, broken pillars, statues, iron gate pieces and coral'],
+  ['forja-extinta', 'Mapa da Forja Extinta', 'extinct foundry hall: black basalt floor, glowing lava cracks and pools, dark metal walls around, anvils, crucibles, slag piles and chains'],
+  ['arena', 'Mapa da arena', 'training arena: clean dark grey floor, a large painted circle and center line, violet edge lights, low walls around'],
 ])
 add('Mapas: objetos de cenário', 'props', 'mapas', [
   ['cidade-objetos', 'Objetos da cidade', 'four separate props, one per cell: a street lamp with violet light, a stone bench, a notice board, a potted dark shrub'],

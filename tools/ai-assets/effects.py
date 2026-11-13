@@ -13,6 +13,13 @@ def glow(draw_fn, size=(C, C), blur=5):
     soft = base.filter(ImageFilter.GaussianBlur(blur))
     return Image.alpha_composite(Image.alpha_composite(soft, soft), base)
 
+def pixelate(img, factor=4):
+    """Reduz e endurece as bordas: o efeito fica em pixel art, como os sprites."""
+    small = img.resize((img.width // factor, img.height // factor), Image.BOX)
+    r, g, b, a = small.split()
+    rgb = Image.merge("RGB", (r, g, b)).quantize(colors=12, dither=Image.NONE).convert("RGB")
+    return Image.merge("RGBA", (*rgb.split(), a.point(lambda v: 255 if v > 70 else 0)))
+
 def sheet(frames):
     out = Image.new("RGBA", (C * 2, C * 2), (0, 0, 0, 0))
     for i, f in enumerate(frames): out.paste(f, ((i % 2) * C, (i // 2) * C))
@@ -50,14 +57,14 @@ def levelup(i):
             dr.line((x - 4, y2, x + 4, y2), fill=(255, 255, 255, a), width=2); dr.line((x, y2 - 4, x, y2 + 4), fill=(255, 255, 255, a), width=2)
     return glow(d)
 
-sheet([slash(i) for i in range(4)]).save(os.path.join(OUT, "golpe.png"))
-sheet([summon(i) for i in range(4)]).save(os.path.join(OUT, "evocacao.png"))
-sheet([levelup(i) for i in range(4)]).save(os.path.join(OUT, "subir-nivel.png"))
+pixelate(sheet([slash(i) for i in range(4)])).save(os.path.join(OUT, "golpe.png"))
+pixelate(sheet([summon(i) for i in range(4)])).save(os.path.join(OUT, "evocacao.png"))
+pixelate(sheet([levelup(i) for i in range(4)])).save(os.path.join(OUT, "subir-nivel.png"))
 def bolt(dr):
     dr.polygon([(8, 32), (40, 24), (40, 40)], fill=(90, 50, 180, 200)); dr.ellipse((34, 20, 58, 44), fill=(155, 107, 255, 255)); dr.ellipse((41, 27, 51, 37), fill=(255, 255, 255, 255))
-glow(bolt, (64, 64), 4).save(os.path.join(OUT, "projetil-arcano.png"))
+pixelate(glow(bolt, (64, 64), 4)).save(os.path.join(OUT, "projetil-arcano.png"))
 def arrow(dr):
     dr.line((6, 32, 50, 32), fill=(150, 100, 55, 255), width=3); dr.polygon([(48, 26), (60, 32), (48, 38)], fill=(255, 190, 80, 255))
     dr.polygon([(6, 32), (14, 26), (16, 32), (14, 38)], fill=(225, 220, 240, 255))
-glow(arrow, (64, 64), 2).save(os.path.join(OUT, "flecha.png"))
+pixelate(glow(arrow, (64, 64), 2)).save(os.path.join(OUT, "flecha.png"))
 print("5 efeitos desenhados")

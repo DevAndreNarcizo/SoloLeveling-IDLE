@@ -3,3 +3,4 @@ client/dist/
 data/
 *.log
 .env
+__pycache__/

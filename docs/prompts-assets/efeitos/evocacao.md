@@ -8,7 +8,7 @@
 ## Prompt (copie e cole no ChatGPT)
 
 ```text
-Dark fantasy RPG game art, anime style illustration, highly detailed, sharp focus, dramatic rim light. Rich but dark palette: charcoal, deep violet and indigo, with cyan, violet or amber glowing accents. No text, no letters, no numbers, no watermark, no signature, no UI frame.
+16-bit JRPG pixel art, crisp hard-edged pixels, bold dark outline, flat cel shading, limited vivid palette. Characters and monsters in chibi proportions (big head, small body, about two heads tall). Dark modern-fantasy theme with violet, cyan or amber glowing accents. No text, no letters, no numbers, no watermark, no signature, no UI frame.
 
 Subject: a dark violet shadow rising from the ground as a pillar of smoke with cyan sparks, four animation frames in reading order: ground circle, rising, peak, dissipating.
 

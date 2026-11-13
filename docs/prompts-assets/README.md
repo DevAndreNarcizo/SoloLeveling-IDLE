@@ -91,16 +91,16 @@ passa a ser usado automaticamente na próxima vez que a página carregar.
 | Colosso de Escória (opcional) | `monstros/colosso-de-escoria.png` | [monstros/colosso-de-escoria.md](monstros/colosso-de-escoria.md) |
 | Serpe Matriarca (opcional) | `monstros/serpe-matriarca.png` | [monstros/serpe-matriarca.md](monstros/serpe-matriarca.md) |
 
-### Mapas: chão (textura contínua) (6)
+### Mapas (montados por tools/ai-assets/maps.py) (6)
 
 | Asset | Arquivo do jogo | Prompt |
 |---|---|---|
-| Chão da cidade | `mapas/cidade-chao.png` | [mapas/cidade-chao.md](mapas/cidade-chao.md) |
-| Chão das Minas Ocas | `mapas/minas-ocas-chao.png` | [mapas/minas-ocas-chao.md](mapas/minas-ocas-chao.md) |
-| Chão do Bosque Cinzento | `mapas/bosque-cinzento-chao.png` | [mapas/bosque-cinzento-chao.md](mapas/bosque-cinzento-chao.md) |
-| Chão da Cidadela Afundada | `mapas/cidadela-afundada-chao.png` | [mapas/cidadela-afundada-chao.md](mapas/cidadela-afundada-chao.md) |
-| Chão da Forja Extinta | `mapas/forja-extinta-chao.png` | [mapas/forja-extinta-chao.md](mapas/forja-extinta-chao.md) |
-| Chão da arena de promoção | `mapas/arena-chao.png` | [mapas/arena-chao.md](mapas/arena-chao.md) |
+| Mapa da cidade (Vértice) | `mapas/cidade.png` | [mapas/cidade.md](mapas/cidade.md) |
+| Mapa das Minas Ocas | `mapas/minas-ocas.png` | [mapas/minas-ocas.md](mapas/minas-ocas.md) |
+| Mapa do Bosque Cinzento | `mapas/bosque-cinzento.png` | [mapas/bosque-cinzento.md](mapas/bosque-cinzento.md) |
+| Mapa da Cidadela Afundada | `mapas/cidadela-afundada.png` | [mapas/cidadela-afundada.md](mapas/cidadela-afundada.md) |
+| Mapa da Forja Extinta | `mapas/forja-extinta.png` | [mapas/forja-extinta.md](mapas/forja-extinta.md) |
+| Mapa da arena | `mapas/arena.png` | [mapas/arena.md](mapas/arena.md) |
 
 ### Mapas: objetos de cenário (5)
 

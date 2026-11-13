@@ -31,7 +31,7 @@ describe('conteúdo', () => {
     const ids = new Set(ASSETS.map((a) => a.id))
     for (const id of Object.keys(MONSTERS)) expect(ids.has(`monstros/${id}`), id).toBe(true)
     for (const id of CLASS_IDS) { expect(ids.has(`cacadores/${id}`)).toBe(true); expect(ids.has(`icones/itens/arma-${id}`)).toBe(true) }
-    for (const r of RIFTS) expect(ids.has(`mapas/${r.id}-chao`), r.id).toBe(true)
+    for (const r of RIFTS) expect(ids.has(`mapas/${r.id}`), r.id).toBe(true)
     expect(new Set(ASSETS.map((a) => a.path)).size).toBe(ASSETS.length)
   })
   it('a EXP exigida e a força dos monstros crescem com o nível', () => {

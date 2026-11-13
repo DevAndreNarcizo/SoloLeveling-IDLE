@@ -204,40 +204,40 @@
   "optional": true
  },
  {
-  "id": "mapas/cidade-chao",
-  "path": "mapas/cidade-chao.png",
-  "format": "tile",
-  "subject": "dark slate stone pavement of a modern city plaza at night, subtle violet reflections, occasional cracks"
+  "id": "mapas/cidade",
+  "path": "mapas/cidade.png",
+  "format": "map",
+  "subject": "night city plaza of hunters: dark slate pavement, a central emblem, roads to the four NPCs, violet street lamps, benches and notice boards near the edges"
  },
  {
-  "id": "mapas/minas-ocas-chao",
-  "path": "mapas/minas-ocas-chao.png",
-  "format": "tile",
-  "subject": "dark brown cave floor with gravel, rust stains and faint rail tracks marks"
+  "id": "mapas/minas-ocas",
+  "path": "mapas/minas-ocas.png",
+  "format": "map",
+  "subject": "abandoned mine cave: brown rock floor, a winding rail track, rust stains, rock walls around, mine carts, wooden supports, ore piles and lanterns near the walls"
  },
  {
-  "id": "mapas/bosque-cinzento-chao",
-  "path": "mapas/bosque-cinzento-chao.png",
-  "format": "tile",
-  "subject": "grey-green forest floor with dead leaves, moss patches and thin mist"
+  "id": "mapas/bosque-cinzento",
+  "path": "mapas/bosque-cinzento.png",
+  "format": "map",
+  "subject": "misty forest clearing: grey-green forest floor, a dirt trail, moss patches, a ring of dense trees around, dead trees, mossy boulders, thorn bushes and fallen logs"
  },
  {
-  "id": "mapas/cidadela-afundada-chao",
-  "path": "mapas/cidadela-afundada-chao.png",
-  "format": "tile",
-  "subject": "wet cracked dark-teal stone tiles with shallow puddles and seaweed"
+  "id": "mapas/cidadela-afundada",
+  "path": "mapas/cidadela-afundada.png",
+  "format": "map",
+  "subject": "sunken citadel courtyard: wet teal stone tiles, puddles, a cracked central path, ruined walls around, broken pillars, statues, iron gate pieces and coral"
  },
  {
-  "id": "mapas/forja-extinta-chao",
-  "path": "mapas/forja-extinta-chao.png",
-  "format": "tile",
-  "subject": "black basalt foundry floor with soot, metal grates and thin glowing orange cracks"
+  "id": "mapas/forja-extinta",
+  "path": "mapas/forja-extinta.png",
+  "format": "map",
+  "subject": "extinct foundry hall: black basalt floor, glowing lava cracks and pools, dark metal walls around, anvils, crucibles, slag piles and chains"
  },
  {
-  "id": "mapas/arena-chao",
-  "path": "mapas/arena-chao.png",
-  "format": "tile",
-  "subject": "clean dark grey training arena floor with faint white painted lines and violet edge lights"
+  "id": "mapas/arena",
+  "path": "mapas/arena.png",
+  "format": "map",
+  "subject": "training arena: clean dark grey floor, a large painted circle and center line, violet edge lights, low walls around"
  },
  {
   "id": "mapas/cidade-objetos",

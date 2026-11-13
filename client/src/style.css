@@ -6,7 +6,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
 #game { position: fixed; inset: 0; }
-#game canvas { display: block; }
+#game canvas { display: block; image-rendering: pixelated; }
 .hidden { display: none !important; }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
@@ -19,7 +19,7 @@ input:focus, button:focus-visible { outline: 2px solid var(--accent2); outline-o
 .muted { color: var(--muted); } .error { color: var(--bad); min-height: 1.2em; margin: 4px 0; } .hint { color: var(--muted); font-size: 12px; margin: 0; }
 .good { color: var(--good); } .bad { color: var(--bad); } .loot { color: var(--loot); }
 
-.screen { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; overflow: auto; z-index: 30;
+.screen { image-rendering: pixelated; position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; overflow: auto; z-index: 30;
   background: radial-gradient(ellipse at 50% 30%, #2a1a52 0%, #0b0816 55%, #07060d 100%); background-size: cover; background-position: center; }
 .card { width: min(400px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 12px; }
 .card.wide { width: min(760px, 100%); }
@@ -49,7 +49,7 @@ input:focus, button:focus-visible { outline: 2px solid var(--accent2); outline-o
 #menu button { display: grid; justify-items: center; gap: 2px; min-width: 62px; font-size: 11px; background: rgba(13, 10, 24, .9); position: relative; }
 #menu button .dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--loot); }
 #hint { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(13, 10, 24, .9); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 12px; }
-.ico { width: 40px; height: 40px; border-radius: 5px; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; object-fit: contain; }
+.ico { width: 40px; height: 40px; border-radius: 5px; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; object-fit: contain; image-rendering: pixelated; }
 span.ico { background: var(--panel2); border: 1px solid var(--line); color: var(--muted); }
 
 #panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 20px)); max-height: min(620px, calc(100vh - 120px));
@@ -97,4 +97,4 @@ button.link { background: none; border: 0; color: var(--accent2); padding: 2px; 
   #menu { overflow-x: auto; justify-content: flex-start; } #menu button { flex: 0 0 56px; }
   #roomBar { bottom: 190px; }
 }
-.classArt { width: 100%; height: 150px; object-fit: contain; }
+.classArt { width: 100%; height: 112px; object-fit: contain; image-rendering: pixelated; }

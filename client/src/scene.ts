@@ -6,12 +6,15 @@ import type { Ent, Fx, RoomInfo } from '../../shared/protocol.ts'
 import { assetUrl, hasAsset, monsterKey } from './assets.ts'
 import { onMessage, send } from './net.ts'
 
+// Formatos que a cena não carrega: ícones e fundo são da interface; 'props' só alimenta o montador de mapas.
+const UI_ONLY = new Set(['icon', 'wide', 'props'])
+const SCALE = 2 // ampliação dos sprites em pixel art
 const CELL = 64 // tamanho da célula dos marcadores gerados por código
 const hash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0 }
 const hsl = (h: number, s: number, l: number) => `hsl(${h % 360} ${s}% ${l}%)`
 const TILE_COLORS: Record<string, [string, string]> = {
-  'mapas/cidade-chao': ['#1b1a2b', '#252338'], 'mapas/minas-ocas-chao': ['#231a14', '#30241b'], 'mapas/bosque-cinzento-chao': ['#1a2320', '#24302b'],
-  'mapas/cidadela-afundada-chao': ['#12242a', '#1a333a'], 'mapas/forja-extinta-chao': ['#1c1413', '#2b1b17'], 'mapas/arena-chao': ['#1c1c22', '#26262e'],
+  'mapas/cidade': ['#1b1a2b', '#252338'], 'mapas/minas-ocas': ['#231a14', '#30241b'], 'mapas/bosque-cinzento': ['#1a2320', '#24302b'],
+  'mapas/cidadela-afundada': ['#12242a', '#1a333a'], 'mapas/forja-extinta': ['#1c1413', '#2b1b17'], 'mapas/arena': ['#1c1c22', '#26262e'],
 }
 
 interface View {
@@ -23,7 +26,7 @@ export class GameScene extends Phaser.Scene {
   private views = new Map<number, View>()
   private room: RoomInfo | null = null
   private you = 0
-  private ground?: Phaser.GameObjects.TileSprite
+  private ground?: Phaser.GameObjects.Image
   private decor: Phaser.GameObjects.GameObject[] = []
   private keys!: Record<string, Phaser.Input.Keyboard.Key>
   private lastMove = '0,0'
@@ -35,12 +38,12 @@ export class GameScene extends Phaser.Scene {
   constructor() { super('game') }
 
   preload() {
-    for (const a of ASSETS) if (hasAsset(a.id) && a.format !== 'icon' && a.format !== 'wide') this.load.image(a.id, assetUrl(a.id))
+    for (const a of ASSETS) if (hasAsset(a.id) && !UI_ONLY.has(a.format)) this.load.image(a.id, assetUrl(a.id))
   }
 
   create() {
     for (const a of ASSETS) {
-      if (a.format === 'icon' || a.format === 'wide') continue
+      if (UI_ONLY.has(a.format)) continue
       if (!this.textures.exists(a.id)) { if (a.optional) continue; this.placeholder(a.id, a.format) }
       const g = FORMAT_GRID[a.format]
       if (g.cols * g.rows > 1) {
@@ -76,11 +79,11 @@ export class GameScene extends Phaser.Scene {
   // ---------- Marcadores para assets ausentes ----------
   private placeholder(id: string, format: string) {
     const g = FORMAT_GRID[format as keyof typeof FORMAT_GRID]
-    const size = format === 'tile' ? 256 : CELL
+    const size = format === 'map' ? 256 : CELL
     const tex = this.textures.createCanvas(id, g.cols * size, g.rows * size)!
     const c = tex.getContext()
     const hue = hash(id) % 360
-    if (format === 'tile') {
+    if (format === 'map') {
       const [a, b] = TILE_COLORS[id] ?? ['#1b1a2b', '#252338']
       c.fillStyle = a; c.fillRect(0, 0, size, size)
       let s = hash(id)
@@ -130,30 +133,17 @@ export class GameScene extends Phaser.Scene {
     for (const d of this.decor) d.destroy()
     this.decor = []
     this.ground?.destroy()
-    const tileKey = `mapas/${room.map}-chao`
-    const tile = this.textures.exists(tileKey) ? tileKey : 'mapas/cidade-chao'
-    const src = this.textures.get(tile).getSourceImage() as HTMLImageElement
-    this.ground = this.add.tileSprite(0, 0, room.w, room.h, tile).setOrigin(0).setDepth(-10)
-    this.ground.setTileScale(256 / src.width)
+    // O mapa é uma imagem só, com metade do tamanho do mundo, exibida ampliada (pixels nítidos).
+    const mapKey = this.textures.exists(`mapas/${room.map}`) ? `mapas/${room.map}` : 'mapas/arena'
+    this.ground = this.add.image(0, 0, mapKey).setOrigin(0).setDisplaySize(room.w, room.h).setDepth(-10)
     this.cameras.main.setBounds(0, 0, room.w, room.h)
     this.cameras.main.setBackgroundColor('#07060d')
-    // Objetos de cenário em posições fixas por mapa (mesmas para todos os jogadores).
-    const propsKey = `mapas/${room.map}-objetos`
-    if (this.textures.exists(propsKey)) {
-      let s = hash(room.map)
-      const rnd = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296 }
-      for (let i = 0; i < 15; i++) {
-        const x = 40 + rnd() * (room.w - 80), y = 40 + rnd() * (room.h - 80)
-        if (room.kind === 'city' && NPCS.some((n) => Math.hypot(n.x - x, n.y - y) < 110)) continue
-        this.decor.push(this.add.image(x, y, propsKey, Math.floor(rnd() * 4)).setDisplaySize(92, 92).setOrigin(0.5, 0.9).setDepth(y))
-      }
-    }
     if (room.kind === 'city') {
       for (const n of NPCS) {
         const key = `npcs/${n.id}`
-        this.decor.push(this.add.image(n.x, n.y, key).setDisplaySize(104, 104).setOrigin(0.5, 0.92).setDepth(n.y))
-        this.decor.push(this.add.text(n.x, n.y - 108, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
-        if (n.panel === 'fendas') this.decor.push(this.add.image(n.x + 96, n.y - 6, 'objetos/fenda').setDisplaySize(100, 150).setOrigin(0.5, 0.92).setDepth(n.y - 1))
+        this.decor.push(this.add.image(n.x, n.y, key).setScale(SCALE).setOrigin(0.5, 1).setDepth(n.y))
+        this.decor.push(this.add.text(n.x, n.y - 122, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
+        if (n.panel === 'fendas') this.decor.push(this.add.image(n.x + 96, n.y - 6, 'objetos/fenda').setScale(SCALE).setOrigin(0.5, 1).setDepth(n.y - 1))
       }
     }
   }
@@ -170,14 +160,15 @@ export class GameScene extends Phaser.Scene {
       let v = this.views.get(e.id)
       if (!v) {
         const key = this.textureFor(e)
-        const size = e.k === 'c' ? 56 : e.k === 'e' ? 76 : e.mk === 'chefe' ? 176 : e.mk === 'elite' ? 116 : 96
-        const sprite = this.add.image(0, 0, key).setDisplaySize(size, size).setOrigin(0.5, 0.92)
+        // Escala inteira: cada pixel do sprite vira um bloco nítido. Elites são um pouco maiores.
+        const sprite = this.add.image(0, 0, key).setScale(e.mk === 'elite' ? SCALE + 0.5 : SCALE).setOrigin(0.5, 1)
+        const size = sprite.displayHeight
         const box = this.add.container(e.x, e.y, [sprite])
         if (e.k === 'e') sprite.setTint(0x8a6cff).setAlpha(0.88)
         if (e.n && e.k !== 'c') {
           const color = e.k === 'p' ? (e.me ? '#ffffff' : '#c9c3e6') : e.k === 'e' ? '#b79cff' : e.mk === 'chefe' ? '#ff6b7a' : e.mk === 'elite' ? '#ffcf5c' : '#d7d3e8'
           const label = e.k === 'p' && e.r ? `[${e.r}] ${e.g ? `<${e.g}> ` : ''}${e.n}` : e.n
-          box.add(this.add.text(0, -size * 0.92 - 12, label, { fontSize: '11px', color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5))
+          box.add(this.add.text(0, -size - 12, label, { fontSize: '11px', color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5))
         }
         v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX }
         if (e.k !== 'c' && this.room?.kind !== 'city') { v.bar = this.add.graphics(); box.add(v.bar) }
@@ -187,7 +178,7 @@ export class GameScene extends Phaser.Scene {
       if (e.k === 'c') v.sprite.setAlpha(e.hp ? 1 : 0.35)
       else if (e.k === 'p') { if (e.sh) v.sprite.setTint(0x9fd8ff); else v.sprite.clearTint() }
       if (v.bar) {
-        const w = e.mk === 'chefe' ? 90 : 46, y = -v.sprite.displayHeight * 0.92 - 4
+        const w = e.mk === 'chefe' ? 90 : 46, y = -v.sprite.displayHeight - 4
         v.bar.clear().fillStyle(0x000000, 0.7).fillRect(-w / 2 - 1, y - 1, w + 2, 6)
           .fillStyle(e.k === 'm' ? 0xe5484d : e.k === 'e' ? 0x8b5cf6 : 0x5fd38a).fillRect(-w / 2, y, w * Math.max(0, e.hp / e.mhp), 4)
       }
@@ -292,7 +283,7 @@ export function startGame(): Promise<{ game: Phaser.Game; scene: GameScene }> {
   return new Promise((ready) => {
     const scene = new GameScene()
     const game = new Phaser.Game({
-      type: Phaser.AUTO, parent: 'game', backgroundColor: '#07060d', antialias: true,
+      type: Phaser.AUTO, parent: 'game', backgroundColor: '#07060d', pixelArt: true, roundPixels: true,
       scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
       scene, banner: false, audio: { noAudio: true },
     })

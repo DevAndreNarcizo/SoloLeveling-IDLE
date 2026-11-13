@@ -9,8 +9,9 @@ import { GAME_NAME } from '../shared/content.ts'
 const OUT = resolve(fileURLToPath(import.meta.url), '../../docs/prompts-assets')
 
 const STYLE = [
-  'Dark fantasy RPG game art, anime style illustration, highly detailed, sharp focus, dramatic rim light.',
-  'Rich but dark palette: charcoal, deep violet and indigo, with cyan, violet or amber glowing accents.',
+  '16-bit JRPG pixel art, crisp hard-edged pixels, bold dark outline, flat cel shading, limited vivid palette.',
+  'Characters and monsters in chibi proportions (big head, small body, about two heads tall).',
+  'Dark modern-fantasy theme with violet, cyan or amber glowing accents.',
   'No text, no letters, no numbers, no watermark, no signature, no UI frame.',
 ].join(' ')
 const TRANSPARENT = 'Fully transparent background (PNG with alpha). No ground shadow, no floor, no backdrop.'
@@ -41,6 +42,11 @@ const FORMAT: Record<AssetFormat, { size: string; pt: string; spec: (a: AssetDef
     size: '1024x1024', pt: 'Textura de chão contínua (repetível), opaca',
     spec: () => 'Output: a seamless tileable ground texture seen from directly above, square 1024x1024, fully opaque, edge to edge. The left edge must match the right edge and the top edge must match the bottom edge so it repeats with no visible seam. Low contrast and no large unique landmarks, because characters must stay readable on top of it. No objects, no characters, no shadows of objects.',
     check: ['Lado a lado, a textura repete sem emenda visível.', 'Contraste baixo: os personagens continuam legíveis por cima.', 'Sem objetos grandes nem personagens.'],
+  },
+  map: {
+    size: '1536x1024', pt: 'Mapa inteiro visto de cima (campo de jogo)',
+    spec: () => 'Output: one complete top-down 2D game map, orthographic view from directly above (no perspective, no isometric angle), landscape 3:2, fully opaque. Scenery and walls only near the edges, with a large flat open walkable area in the center. No characters, no text.',
+    check: ['Visto exatamente de cima, sem perspectiva.', 'Centro livre e plano para os personagens andarem.', 'Sem personagens nem texto.'],
   },
   props: {
     size: '1024x1024', pt: 'Folha 2×2 com quatro objetos de cenário, fundo transparente',
