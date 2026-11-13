@@ -1,0 +1,476 @@
+[
+ {
+  "id": "cacadores/lamina",
+  "path": "cacadores/lamina.png",
+  "format": "sheet",
+  "subject": "a sturdy hunter in a dark charcoal combat coat with steel shoulder guard, carrying a broad one-handed sword, short dark hair, violet glowing trim on the coat"
+ },
+ {
+  "id": "cacadores/vulto",
+  "path": "cacadores/vulto.png",
+  "format": "sheet",
+  "subject": "a lean agile hunter in a black hooded jacket and face scarf, holding two short daggers in reverse grip, teal glowing trim"
+ },
+ {
+  "id": "cacadores/arcanista",
+  "path": "cacadores/arcanista.png",
+  "format": "sheet",
+  "subject": "a slim hunter in a long dark indigo coat with a high collar, holding a short metal staff tipped with a floating violet crystal, silver hair"
+ },
+ {
+  "id": "cacadores/atirador",
+  "path": "cacadores/atirador.png",
+  "format": "sheet",
+  "subject": "a hunter in a dark green tactical cloak with a quiver on the back, holding a compact recurve bow, amber glowing trim"
+ },
+ {
+  "id": "npcs/guardia-das-fendas",
+  "path": "npcs/guardia-das-fendas.png",
+  "format": "image",
+  "subject": "a calm woman in a long white-and-violet officer coat holding a glowing tablet, facing the viewer"
+ },
+ {
+  "id": "npcs/mercador",
+  "path": "npcs/mercador.png",
+  "format": "image",
+  "subject": "a cheerful stocky merchant with a big backpack full of bottles and pouches, brown apron, facing the viewer"
+ },
+ {
+  "id": "npcs/ferreira",
+  "path": "npcs/ferreira.png",
+  "format": "image",
+  "subject": "a muscular blacksmith woman with a leather apron, soot on her arms, holding a hammer on her shoulder, facing the viewer"
+ },
+ {
+  "id": "npcs/arquivista",
+  "path": "npcs/arquivista.png",
+  "format": "image",
+  "subject": "a thin elderly archivist with round glasses, grey robe, carrying a large book and a quill, facing the viewer"
+ },
+ {
+  "id": "monstros/larva-de-ferrugem",
+  "path": "monstros/larva-de-ferrugem.png",
+  "format": "sheet",
+  "subject": "a fat segmented grub the size of a dog with rust-orange metal plates on its back and small mandibles"
+ },
+ {
+  "id": "monstros/morcego-de-cinza",
+  "path": "monstros/morcego-de-cinza.png",
+  "format": "sheet",
+  "subject": "a large grey bat with tattered wings that shed ash particles, glowing ember-orange eyes"
+ },
+ {
+  "id": "monstros/catador-oco",
+  "path": "monstros/catador-oco.png",
+  "format": "sheet",
+  "subject": "a hunched hollow-eyed humanoid scavenger made of dark rags and mining scrap, carrying a rusty pickaxe, an empty glowing-blue chest cavity"
+ },
+ {
+  "id": "monstros/lobo-de-nevoa",
+  "path": "monstros/lobo-de-nevoa.png",
+  "format": "sheet",
+  "subject": "a grey wolf whose legs and tail dissolve into pale mist, pale blue eyes"
+ },
+ {
+  "id": "monstros/espinheiro-vivo",
+  "path": "monstros/espinheiro-vivo.png",
+  "format": "sheet",
+  "subject": "a walking bramble bush creature with thorny vine arms and a single pale-green glowing bud for a head"
+ },
+ {
+  "id": "monstros/cervo-espectral",
+  "path": "monstros/cervo-espectral.png",
+  "format": "sheet",
+  "subject": "a translucent ghostly stag with bone-white antlers and a faint cyan glow inside its chest"
+ },
+ {
+  "id": "monstros/sentinela-afogada",
+  "path": "monstros/sentinela-afogada.png",
+  "format": "sheet",
+  "subject": "a waterlogged armored soldier covered in barnacles and seaweed, holding a corroded spear, dripping water"
+ },
+ {
+  "id": "monstros/sacerdote-do-lodo",
+  "path": "monstros/sacerdote-do-lodo.png",
+  "format": "sheet",
+  "subject": "a robed cultist whose robe melts into dark green mud, holding a lantern with a sickly green flame"
+ },
+ {
+  "id": "monstros/armadura-vazia",
+  "path": "monstros/armadura-vazia.png",
+  "format": "sheet",
+  "subject": "an empty animated suit of dark plate armor with violet light leaking from the joints, holding a greatsword"
+ },
+ {
+  "id": "monstros/brasa-errante",
+  "path": "monstros/brasa-errante.png",
+  "format": "sheet",
+  "subject": "a floating cluster of glowing coals bound by black iron rings, small flames trailing behind"
+ },
+ {
+  "id": "monstros/golem-de-escoria",
+  "path": "monstros/golem-de-escoria.png",
+  "format": "sheet",
+  "subject": "a bulky golem made of cooled black slag with cracks of molten orange, heavy fists"
+ },
+ {
+  "id": "monstros/serpe-de-cinza",
+  "path": "monstros/serpe-de-cinza.png",
+  "format": "sheet",
+  "subject": "a small wingless ash-grey wyvern-like lizard walking on four legs with smoking nostrils and charcoal scales"
+ },
+ {
+  "id": "monstros/larva-mae",
+  "path": "monstros/larva-mae.png",
+  "format": "sheet",
+  "subject": "a huge bloated grub queen with thick rust-orange armor plates, many small legs and a crown of jagged metal spikes"
+ },
+ {
+  "id": "monstros/asa-ancia",
+  "path": "monstros/asa-ancia.png",
+  "format": "sheet",
+  "subject": "a giant ancient bat with scarred torn wings, a mane of white fur and burning orange eyes, ash falling from its wings"
+ },
+ {
+  "id": "monstros/capataz-oco",
+  "path": "monstros/capataz-oco.png",
+  "format": "sheet",
+  "subject": "a tall hollow humanoid foreman in a tattered long coat and a cracked mining helmet with a lamp, wielding a heavy chain, glowing blue chest cavity"
+ },
+ {
+  "id": "monstros/alfa-da-nevoa",
+  "path": "monstros/alfa-da-nevoa.png",
+  "format": "sheet",
+  "subject": "a massive white-grey alpha wolf with a mist mane and three glowing pale-blue eyes"
+ },
+ {
+  "id": "monstros/raiz-ancia",
+  "path": "monstros/raiz-ancia.png",
+  "format": "sheet",
+  "subject": "a towering old tree-root creature with thorn whips, moss beard and several pale-green glowing buds"
+ },
+ {
+  "id": "monstros/rei-galhado",
+  "path": "monstros/rei-galhado.png",
+  "format": "sheet",
+  "subject": "a regal ghostly stag king with enormous branching antlers wrapped in cyan spirit flames"
+ },
+ {
+  "id": "monstros/capitao-das-mares",
+  "path": "monstros/capitao-das-mares.png",
+  "format": "sheet",
+  "subject": "a drowned captain in a barnacle-covered coat and tricorn-like helmet, wielding a rusted anchor as a weapon"
+ },
+ {
+  "id": "monstros/hierofante-do-lodo",
+  "path": "monstros/hierofante-do-lodo.png",
+  "format": "sheet",
+  "subject": "a tall high priest with a tall mud-dripping mitre, carrying a censer that spills green fog, robe melting into sludge"
+ },
+ {
+  "id": "monstros/guardiao-do-selo",
+  "path": "monstros/guardiao-do-selo.png",
+  "format": "sheet",
+  "subject": "a colossal empty armor with a tower shield engraved with a glowing violet seal and a halberd"
+ },
+ {
+  "id": "monstros/coracao-de-fornalha",
+  "path": "monstros/coracao-de-fornalha.png",
+  "format": "sheet",
+  "subject": "a huge floating furnace core of white-hot coals inside a cracked iron cage, flames bursting from the gaps"
+ },
+ {
+  "id": "monstros/colosso-de-escoria",
+  "path": "monstros/colosso-de-escoria.png",
+  "format": "sheet",
+  "subject": "a giant slag colossus with molten orange veins, one arm shaped like a hammer"
+ },
+ {
+  "id": "monstros/serpe-matriarca",
+  "path": "monstros/serpe-matriarca.png",
+  "format": "sheet",
+  "subject": "a large ash-grey wyvern matriarch with small folded wings, horned crest and glowing ember throat"
+ },
+ {
+  "id": "mapas/cidade-chao",
+  "path": "mapas/cidade-chao.png",
+  "format": "tile",
+  "subject": "dark slate stone pavement of a modern city plaza at night, subtle violet reflections, occasional cracks"
+ },
+ {
+  "id": "mapas/minas-ocas-chao",
+  "path": "mapas/minas-ocas-chao.png",
+  "format": "tile",
+  "subject": "dark brown cave floor with gravel, rust stains and faint rail tracks marks"
+ },
+ {
+  "id": "mapas/bosque-cinzento-chao",
+  "path": "mapas/bosque-cinzento-chao.png",
+  "format": "tile",
+  "subject": "grey-green forest floor with dead leaves, moss patches and thin mist"
+ },
+ {
+  "id": "mapas/cidadela-afundada-chao",
+  "path": "mapas/cidadela-afundada-chao.png",
+  "format": "tile",
+  "subject": "wet cracked dark-teal stone tiles with shallow puddles and seaweed"
+ },
+ {
+  "id": "mapas/forja-extinta-chao",
+  "path": "mapas/forja-extinta-chao.png",
+  "format": "tile",
+  "subject": "black basalt foundry floor with soot, metal grates and thin glowing orange cracks"
+ },
+ {
+  "id": "mapas/arena-chao",
+  "path": "mapas/arena-chao.png",
+  "format": "tile",
+  "subject": "clean dark grey training arena floor with faint white painted lines and violet edge lights"
+ },
+ {
+  "id": "mapas/cidade-objetos",
+  "path": "mapas/cidade-objetos.png",
+  "format": "props",
+  "subject": "four separate props, one per cell: a street lamp with violet light, a stone bench, a notice board, a potted dark shrub"
+ },
+ {
+  "id": "mapas/minas-ocas-objetos",
+  "path": "mapas/minas-ocas-objetos.png",
+  "format": "props",
+  "subject": "four separate props, one per cell: a broken mine cart, a wooden support beam, a pile of ore rocks, a hanging oil lantern on a post"
+ },
+ {
+  "id": "mapas/bosque-cinzento-objetos",
+  "path": "mapas/bosque-cinzento-objetos.png",
+  "format": "props",
+  "subject": "four separate props, one per cell: a dead grey tree, a mossy boulder, a thorn bush, a fallen log"
+ },
+ {
+  "id": "mapas/cidadela-afundada-objetos",
+  "path": "mapas/cidadela-afundada-objetos.png",
+  "format": "props",
+  "subject": "four separate props, one per cell: a broken stone pillar, a barnacle-covered statue, a rusted iron gate fragment, a coral cluster"
+ },
+ {
+  "id": "mapas/forja-extinta-objetos",
+  "path": "mapas/forja-extinta-objetos.png",
+  "format": "props",
+  "subject": "four separate props, one per cell: an anvil, a cracked crucible with a faint glow, a pile of slag, a broken iron chain pile"
+ },
+ {
+  "id": "objetos/fenda",
+  "path": "objetos/fenda.png",
+  "format": "image",
+  "subject": "a vertical oval tear in space, a swirling violet-and-cyan vortex with a bright rim and small floating shards around it"
+ },
+ {
+  "id": "objetos/resquicio",
+  "path": "objetos/resquicio.png",
+  "format": "image",
+  "subject": "a small pile of dark smoky remains on the ground with a faint violet wisp rising from it"
+ },
+ {
+  "id": "efeitos/golpe",
+  "path": "efeitos/golpe.png",
+  "format": "fx",
+  "subject": "a white-violet crescent slash arc, four animation frames in reading order: thin start, full arc, fading arc, small sparks"
+ },
+ {
+  "id": "efeitos/evocacao",
+  "path": "efeitos/evocacao.png",
+  "format": "fx",
+  "subject": "a dark violet shadow rising from the ground as a pillar of smoke with cyan sparks, four animation frames in reading order: ground circle, rising, peak, dissipating"
+ },
+ {
+  "id": "efeitos/subir-nivel",
+  "path": "efeitos/subir-nivel.png",
+  "format": "fx",
+  "subject": "a golden-white ring of light bursting upward with small stars, four animation frames in reading order: small ring, expanding, peak with rays, fading"
+ },
+ {
+  "id": "efeitos/projetil-arcano",
+  "path": "efeitos/projetil-arcano.png",
+  "format": "image",
+  "subject": "a small glowing violet energy orb with a short trail, pointing to the right"
+ },
+ {
+  "id": "efeitos/flecha",
+  "path": "efeitos/flecha.png",
+  "format": "image",
+  "subject": "a single arrow with an amber glowing tip, pointing to the right, horizontal"
+ },
+ {
+  "id": "icones/itens/arma-lamina",
+  "path": "icones/itens/arma-lamina.png",
+  "format": "icon",
+  "subject": "a broad one-handed sword with a dark hilt"
+ },
+ {
+  "id": "icones/itens/arma-vulto",
+  "path": "icones/itens/arma-vulto.png",
+  "format": "icon",
+  "subject": "two crossed short daggers"
+ },
+ {
+  "id": "icones/itens/arma-arcanista",
+  "path": "icones/itens/arma-arcanista.png",
+  "format": "icon",
+  "subject": "a short metal staff with a violet crystal tip"
+ },
+ {
+  "id": "icones/itens/arma-atirador",
+  "path": "icones/itens/arma-atirador.png",
+  "format": "icon",
+  "subject": "a compact recurve bow with one arrow"
+ },
+ {
+  "id": "icones/itens/elmo",
+  "path": "icones/itens/elmo.png",
+  "format": "icon",
+  "subject": "a dark steel combat helmet with a visor"
+ },
+ {
+  "id": "icones/itens/armadura",
+  "path": "icones/itens/armadura.png",
+  "format": "icon",
+  "subject": "a dark armored chest piece"
+ },
+ {
+  "id": "icones/itens/luvas",
+  "path": "icones/itens/luvas.png",
+  "format": "icon",
+  "subject": "a pair of armored gauntlets"
+ },
+ {
+  "id": "icones/itens/botas",
+  "path": "icones/itens/botas.png",
+  "format": "icon",
+  "subject": "a pair of reinforced combat boots"
+ },
+ {
+  "id": "icones/itens/anel",
+  "path": "icones/itens/anel.png",
+  "format": "icon",
+  "subject": "a silver ring with a small glowing gem"
+ },
+ {
+  "id": "icones/itens/pocao",
+  "path": "icones/itens/pocao.png",
+  "format": "icon",
+  "subject": "a round glass flask with red liquid and a cork"
+ },
+ {
+  "id": "icones/itens/fragmento",
+  "path": "icones/itens/fragmento.png",
+  "format": "icon",
+  "subject": "a jagged dark crystal shard with a violet glow inside"
+ },
+ {
+  "id": "icones/itens/lasca",
+  "path": "icones/itens/lasca.png",
+  "format": "icon",
+  "subject": "a thin cyan crystalline splinter emitting sparks"
+ },
+ {
+  "id": "icones/itens/ouro",
+  "path": "icones/itens/ouro.png",
+  "format": "icon",
+  "subject": "a small stack of gold coins"
+ },
+ {
+  "id": "icones/atributos/for",
+  "path": "icones/atributos/for.png",
+  "format": "icon",
+  "subject": "a clenched fist, red accent"
+ },
+ {
+  "id": "icones/atributos/agi",
+  "path": "icones/atributos/agi.png",
+  "format": "icon",
+  "subject": "a winged boot, green accent"
+ },
+ {
+  "id": "icones/atributos/vit",
+  "path": "icones/atributos/vit.png",
+  "format": "icon",
+  "subject": "a heart with a shield outline, pink accent"
+ },
+ {
+  "id": "icones/atributos/int",
+  "path": "icones/atributos/int.png",
+  "format": "icon",
+  "subject": "an open book with a spark above it, blue accent"
+ },
+ {
+  "id": "icones/atributos/per",
+  "path": "icones/atributos/per.png",
+  "format": "icon",
+  "subject": "a stylized eye with a crosshair, yellow accent"
+ },
+ {
+  "id": "icones/classes/lamina",
+  "path": "icones/classes/lamina.png",
+  "format": "icon",
+  "subject": "a shield emblem with a vertical sword, violet accent"
+ },
+ {
+  "id": "icones/classes/vulto",
+  "path": "icones/classes/vulto.png",
+  "format": "icon",
+  "subject": "a hood silhouette with two crossed daggers, teal accent"
+ },
+ {
+  "id": "icones/classes/arcanista",
+  "path": "icones/classes/arcanista.png",
+  "format": "icon",
+  "subject": "a crystal inside a circle of runes, indigo accent"
+ },
+ {
+  "id": "icones/classes/atirador",
+  "path": "icones/classes/atirador.png",
+  "format": "icon",
+  "subject": "a bow with a nocked arrow inside a circle, amber accent"
+ },
+ {
+  "id": "icones/menu/status",
+  "path": "icones/menu/status.png",
+  "format": "icon",
+  "subject": "a character silhouette bust with a small plus sign"
+ },
+ {
+  "id": "icones/menu/mochila",
+  "path": "icones/menu/mochila.png",
+  "format": "icon",
+  "subject": "a leather backpack"
+ },
+ {
+  "id": "icones/menu/ecos",
+  "path": "icones/menu/ecos.png",
+  "format": "icon",
+  "subject": "three overlapping shadowy figures with glowing eyes"
+ },
+ {
+  "id": "icones/menu/fendas",
+  "path": "icones/menu/fendas.png",
+  "format": "icon",
+  "subject": "a swirling portal tear"
+ },
+ {
+  "id": "ui/logo",
+  "path": "ui/logo.png",
+  "format": "wide",
+  "subject": "a game logo emblem without any letters: a violet portal tear behind a hooded hunter silhouette, framed by angular metallic borders, transparent background"
+ },
+ {
+  "id": "ui/fundo-login",
+  "path": "ui/fundo-login.png",
+  "format": "wide",
+  "subject": "a wide night scene: a lone hooded hunter seen from behind standing before a huge glowing violet rift in the middle of a dark city plaza, shadows of creatures rising from the ground around, opaque full background"
+ },
+ {
+  "id": "ui/favicon",
+  "path": "ui/favicon.png",
+  "format": "icon",
+  "subject": "a minimal violet portal tear symbol, very simple, readable at 32 pixels"
+ }
+]

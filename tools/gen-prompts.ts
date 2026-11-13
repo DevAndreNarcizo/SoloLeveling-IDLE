@@ -143,4 +143,6 @@ passa a ser usado automaticamente na próxima vez que a página carregar.
 ${[...byCat].map(([cat, items]) => `### ${cat} (${items.length})\n\n| Asset | Arquivo do jogo | Prompt |\n|---|---|---|\n${items.map((a) => `| ${a.title}${a.optional ? ' (opcional)' : ''} | \`${a.path}\` | [${a.id}.md](${a.id}.md) |`).join('\n')}`).join('\n\n')}
 `
 writeFileSync(join(OUT, 'README.md'), index)
+// Manifesto em JSON para o gerador local de imagens (tools/ai-assets/generate.py).
+writeFileSync(resolve(OUT, '../../tools/ai-assets/manifest.json'), JSON.stringify(ASSETS.map(({ id, path, format, subject }) => ({ id, path, format, subject })), null, 1))
 console.log(`${ASSETS.length} prompts gerados em docs/prompts-assets/`)

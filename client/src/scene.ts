@@ -150,7 +150,7 @@ export class GameScene extends Phaser.Scene {
         const key = `npcs/${n.id}`
         this.decor.push(this.add.image(n.x, n.y, key).setDisplaySize(64, 64).setOrigin(0.5, 0.85).setDepth(n.y))
         this.decor.push(this.add.text(n.x, n.y - 62, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
-        if (n.panel === 'fendas') this.decor.push(this.add.image(n.x + 70, n.y - 6, 'objetos/fenda').setDisplaySize(72, 72).setOrigin(0.5, 0.85).setDepth(n.y - 1))
+        if (n.panel === 'fendas') this.decor.push(this.add.image(n.x + 70, n.y - 6, 'objetos/fenda').setDisplaySize(72, 96).setOrigin(0.5, 0.85).setDepth(n.y - 1))
       }
     }
   }
@@ -167,7 +167,7 @@ export class GameScene extends Phaser.Scene {
       let v = this.views.get(e.id)
       if (!v) {
         const key = this.textureFor(e)
-        const size = e.k === 'c' ? 44 : e.k === 'e' ? 48 : e.mk === 'chefe' ? 104 : e.mk === 'elite' ? 72 : 60
+        const size = e.k === 'c' ? 48 : e.k === 'e' ? 48 : e.mk === 'chefe' ? 144 : e.mk === 'elite' ? 80 : 64
         const sprite = this.add.image(0, 0, key, e.k === 'c' ? undefined : 0).setDisplaySize(size, size).setOrigin(0.5, 0.85)
         const box = this.add.container(e.x, e.y, [sprite])
         if (e.k === 'e') sprite.setTint(0x8a6cff).setAlpha(0.88)
