@@ -1,13 +1,15 @@
-// Arranque: entrada na conta, criação do caçador e início do jogo.
+// Arranque: entrada na conta, recuperação de senha, criação do caçador e início do jogo.
 import { CLASSES, CLASS_IDS, GAME_NAME, type ClassId } from '../../shared/content.ts'
 import { assetUrl, hasAsset, icon } from './assets.ts'
 import { api, connect, onMessage, send, state } from './net.ts'
 import { startGame } from './scene.ts'
-import { h, handleUi, initUi, openPanel, setHint } from './ui.ts'
+import { h, handleUi, initUi, openPanel, openSocial, setHint } from './ui.ts'
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T
 const TOKEN_KEY = 'umbral.token'
 const show = (id: string, on: boolean) => $(id).classList.toggle('hidden', !on)
+const SCREENS = ['auth', 'forgot', 'reset', 'create']
+const screen = (id: string | null) => { for (const s of SCREENS) show(s, s === id) }
 // O navegador pode bloquear o armazenamento (aba anônima): nesse caso a sessão vale só até fechar a página.
 const store = {
   get: () => { try { return localStorage.getItem(TOKEN_KEY) } catch { return null } },
@@ -16,8 +18,7 @@ const store = {
 
 document.title = GAME_NAME
 $('gameTitle').textContent = GAME_NAME
-if (hasAsset('ui/fundo-login')) for (const id of ['auth', 'create']) $(id).style.backgroundImage = `linear-gradient(rgba(7,6,13,.55), rgba(7,6,13,.85)), url(${assetUrl('ui/fundo-login')})`
-if (hasAsset('ui/logo')) $('gameTitle').before(Object.assign(document.createElement('img'), { src: assetUrl('ui/logo'), alt: '', style: 'width:60%;justify-self:center' }))
+if (hasAsset('ui/fundo-login')) for (const id of SCREENS) $(id).style.backgroundImage = `linear-gradient(rgba(7,6,13,.45), rgba(7,6,13,.8)), url(${assetUrl('ui/fundo-login')})`
 if (hasAsset('ui/favicon')) document.head.append(Object.assign(document.createElement('link'), { rel: 'icon', type: 'image/png', href: assetUrl('ui/favicon') }))
 
 // ---------- Conta ----------
@@ -27,19 +28,41 @@ function setMode(m: 'login' | 'register') {
   $('tabLogin').classList.toggle('on', m === 'login'); $('tabRegister').classList.toggle('on', m === 'register')
   $('authSubmit').textContent = m === 'login' ? 'Entrar' : 'Criar conta'
   $<HTMLInputElement>('pass').autocomplete = m === 'login' ? 'current-password' : 'new-password'
+  show('emailRow', m === 'register'); show('authHint', m === 'register'); show('forgotLink', m === 'login')
   $('authError').textContent = ''
 }
+setMode('login')
 $('tabLogin').onclick = () => setMode('login')
 $('tabRegister').onclick = () => setMode('register')
 $('authForm').addEventListener('submit', async (e) => {
   e.preventDefault()
   const submit = $<HTMLButtonElement>('authSubmit')
   submit.disabled = true
-  const r = await api(mode, { user: $<HTMLInputElement>('user').value.trim(), pass: $<HTMLInputElement>('pass').value })
+  const body: Record<string, string> = { user: $<HTMLInputElement>('user').value.trim(), pass: $<HTMLInputElement>('pass').value }
+  if (mode === 'register') body.email = $<HTMLInputElement>('email').value.trim()
+  const r = await api(mode, body)
   submit.disabled = false
   if (!r.token) { $('authError').textContent = r.error ?? 'Não foi possível entrar.'; return }
   store.set(r.token)
   void begin(r.token)
+})
+
+// ---------- Recuperação de senha ----------
+$('forgotLink').onclick = () => { $('forgotMsg').textContent = ''; screen('forgot'); $('forgotUser').focus() }
+$('forgotBack').onclick = () => screen('auth')
+$('forgotForm').addEventListener('submit', async (e) => {
+  e.preventDefault()
+  const r = await api('forgot', { user: $<HTMLInputElement>('forgotUser').value.trim() })
+  $('forgotMsg').textContent = r.error ?? 'Se a conta existir e tiver e-mail cadastrado, o link foi enviado. Confira também a caixa de spam.'
+})
+const resetToken = new URLSearchParams(location.search).get('reset')
+$('resetForm').addEventListener('submit', async (e) => {
+  e.preventDefault()
+  const r = await api('reset', { token: resetToken ?? '', pass: $<HTMLInputElement>('resetPass').value })
+  if (!r.ok) { $('resetError').textContent = r.error ?? 'Não foi possível trocar a senha.'; return }
+  history.replaceState(null, '', location.pathname) // tira o token da barra de endereço
+  store.set(null); screen('auth')
+  $('authError').textContent = 'Senha trocada. Entre com a senha nova.'
 })
 
 // ---------- Criação do caçador ----------
@@ -47,8 +70,9 @@ let chosen: ClassId = 'lamina'
 function renderClasses() {
   $('classCards').replaceChildren(...CLASS_IDS.map((id) => {
     const c = CLASSES[id]
+    const art = hasAsset(`cacadores/${id}`) ? Object.assign(document.createElement('img'), { src: assetUrl(`cacadores/${id}`), alt: '', className: 'classArt' }) : icon(`icones/classes/${id}`, c.name)
     return h('button', { type: 'button', class: `classCard${id === chosen ? ' on' : ''}`, onclick: () => { chosen = id; renderClasses() } },
-      icon(`icones/classes/${id}`, c.name), h('b', {}, c.name), h('span', {}, c.desc),
+      art, h('b', {}, c.name), h('span', {}, c.desc),
       h('span', {}, `${c.range > 100 ? 'À distância' : 'Corpo a corpo'} · ${c.atkPerSec} ataque/s · golpe de ${Math.round(c.dmgMult * 100)}%`))
   }))
 }
@@ -67,22 +91,23 @@ async function begin(token: string) {
     initUi()
     const { game, scene } = await startGame()
     game.events.on('npc', (panel: string) => openPanel(panel))
+    game.events.on('player', (name: string) => openSocial(name))
     scene.onNearNpc = (npc) => setHint(npc ? `E · ${npc.name} (${npc.role})` : null)
     onMessage((m) => {
-      if (m.t === 'needChar') { show('auth', false); show('create', true); $('charName').focus() }
-      else if (m.t === 'char') { show('auth', false); show('create', false); show('hud', true) }
+      if (m.t === 'needChar') { screen('create'); $('charName').focus() }
+      else if (m.t === 'char') { screen(null); show('hud', true) }
       else if (m.t === 'err' && !state.char) $('createError').textContent = m.text
       handleUi(m)
     })
   }
   connect(token, (reason) => {
     // Sessão encerrada: volta para a tela de entrada, sem apagar nada do servidor.
-    state.char = null
-    show('hud', false); show('create', false); show('panel', false); show('auth', true)
+    state.char = null; state.party = null; state.trade = null; state.guild = null
+    show('hud', false); show('panel', false); screen('auth')
     $('authError').textContent = reason
-    if (reason.startsWith('Sessão expirada')) store.set(null)
+    if (reason.startsWith('Sessão expirada') || reason.startsWith('A senha foi trocada')) store.set(null)
   })
 }
 
-const saved = store.get()
-if (saved) void begin(saved)
+if (resetToken) screen('reset')
+else { const saved = store.get(); if (saved) void begin(saved) }

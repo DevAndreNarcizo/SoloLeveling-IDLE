@@ -75,6 +75,7 @@ export class Db {
   /** Aplica, em ordem, os arquivos de server/migrations ainda não aplicados. */
   async migrate() {
     await this.sql.exec('create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())')
+    await this.sql.exec('alter table schema_migrations enable row level security')
     const done = new Set((await this.q<{ name: string }>('select name from schema_migrations')).map((r) => r.name))
     if (!existsSync(MIGRATIONS)) return
     for (const f of readdirSync(MIGRATIONS).filter((n) => n.endsWith('.sql')).sort()) {

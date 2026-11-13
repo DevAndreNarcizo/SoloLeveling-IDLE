@@ -18,9 +18,31 @@
     <div class="tabs"><button type="button" id="tabLogin" class="on">Entrar</button><button type="button" id="tabRegister">Criar conta</button></div>
     <label>Usuário<input id="user" name="username" autocomplete="username" minlength="3" maxlength="16" required /></label>
     <label>Senha<input id="pass" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="72" required /></label>
-    <p class="hint" id="authHint">A conta usa só usuário e senha. Não pedimos e-mail; por isso, ainda não há recuperação de senha.</p>
+    <label id="emailRow" class="hidden">E-mail (opcional)<input id="email" name="email" type="email" autocomplete="email" maxlength="254" /></label>
+    <p class="hint" id="authHint">O e-mail é opcional e serve só para recuperar a senha. Sem ele, não há como recuperar a conta.</p>
     <p class="error" id="authError" role="alert"></p>
     <button class="primary" id="authSubmit">Entrar</button>
+    <button type="button" class="link" id="forgotLink">Esqueci a senha</button>
+  </form>
+</section>
+
+<section id="forgot" class="screen hidden">
+  <form class="card" id="forgotForm">
+    <h2>Recuperar a senha</h2>
+    <p class="muted">Informe o usuário ou o e-mail da conta. Se houver um e-mail cadastrado, enviaremos um link válido por 30 minutos.</p>
+    <label>Usuário ou e-mail<input id="forgotUser" maxlength="254" required /></label>
+    <p class="hint" id="forgotMsg" role="status"></p>
+    <button class="primary">Enviar link</button>
+    <button type="button" class="link" id="forgotBack">Voltar</button>
+  </form>
+</section>
+
+<section id="reset" class="screen hidden">
+  <form class="card" id="resetForm">
+    <h2>Criar senha nova</h2>
+    <label>Senha nova<input id="resetPass" type="password" autocomplete="new-password" minlength="8" maxlength="72" required /></label>
+    <p class="error" id="resetError" role="alert"></p>
+    <button class="primary">Salvar senha</button>
   </form>
 </section>
 
@@ -40,8 +62,11 @@
   <div id="log" class="box" aria-live="polite"></div>
   <div id="chat" class="box">
     <div id="chatLines"></div>
-    <form id="chatForm"><input id="chatInput" maxlength="160" placeholder="Enter para conversar" autocomplete="off" /></form>
+    <form id="chatForm"><select id="chatChannel" aria-label="Canal do chat"></select><input id="chatInput" maxlength="160" placeholder="Enter para conversar" autocomplete="off" /></form>
   </div>
+  <div id="party" class="box hidden"></div>
+  <div id="skills" class="hidden"></div>
+  <div id="invites"></div>
   <nav id="menu"></nav>
   <div id="hint" class="hidden"></div>
 </div>

@@ -14,36 +14,59 @@ npm start          # servidor em http://localhost:3000
 Desenvolvimento (dois terminais): `npm run dev:server` e `npm run dev:client` (abre em http://localhost:5173).
 Testes: `npm test`. Tipos: `npm run typecheck`.
 
-Variáveis: `PORT` (padrão 3000) e `DB_FILE` (padrão `data/umbral.db`).
+## Configuração (variáveis de ambiente)
 
-## O que já existe (v0.1)
+| Variável | Para quê | Sem ela |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL de produção (Supabase: Project Settings → Database → Connection string, modo *Session pooler*) | Postgres embutido (PGlite) em `data/pg` |
+| `DATABASE_CA` | Caminho do certificado `.crt` do Supabase, para verificar o servidor do banco | Conexão cifrada, mas sem verificar o certificado |
+| `PORT` | Porta HTTP | 3000 |
+| `PUBLIC_URL` | Endereço público do jogo, usado no link de troca de senha | Usa o host da requisição |
+| `RESEND_API_KEY`, `MAIL_FROM` | Envio do e-mail de troca de senha pelo Resend | O link só aparece no console do servidor |
+| `PAYMENTS=dev` | Simula compras de cristais aprovadas na hora (só para desenvolver) | Compras desabilitadas |
 
-- Conta com usuário e senha (sem e-mail), sessão por token, uma sessão por conta.
-- Cidade compartilhada (Vértice): jogadores se veem, andam e conversam; NPCs abrem Fendas, Loja, Forja e Ranking.
-- 4 classes, 5 atributos, nível 1–60, ranks E–B com teste de promoção e limite de nível por rank.
-- 4 fendas, 12 faixas, 12 monstros e 12 chefes; combate automático simulado no servidor; elites e chefe a cada 40 abates.
-- Equipamento em 6 espaços e 5 raridades, mochila, venda, aprimoramento até +10.
-- Ecos: evocar (tecla E) de resquícios, time em campo conforme o rank, fusão 3→1 em 5 graus.
-- Descanso: sair do jogo durante uma caçada de 3+ minutos rende EXP e ouro por até 8 horas.
+O esquema do banco está em `server/migrations/` e é aplicado sozinho quando o servidor sobe.
+Para dar papel de moderador ou administrador: `update accounts set role = 'mod' where username_lower = '...'` (ou `'admin'`).
 
-## Fora desta versão
+## O que existe
 
-Mercado, troca entre jogadores, guildas, PvP, grupos, talentos e habilidades ativas, loja com dinheiro real,
-recuperação de senha, moderação do chat e PostgreSQL (hoje é SQLite, adequado para testes e poucos jogadores).
+- **Conta:** usuário e senha, e-mail opcional, recuperação de senha por link, uma sessão por conta.
+- **Cidade compartilhada (Vértice):** jogadores se veem, andam e conversam; NPCs abrem Fendas, Loja, Forja e Ranking.
+- **Progressão:** 4 classes, 5 atributos, nível 1–60, ranks E–B com teste de promoção, 12 talentos em 3 sendas,
+  3 habilidades ativas por classe (uso automático).
+- **Fendas:** 4 fendas, 12 faixas, 12 monstros e 12 chefes; combate simulado no servidor; se o caçador cai, volta em segundos.
+- **Grupo:** até 4 caçadores na mesma fenda, com EXP e ouro divididos.
+- **Arena (PvP):** duelo 1×1 automático com pontuação e ranking.
+- **Equipamento:** 6 espaços, 5 raridades, forja até +10, loja de consumíveis.
+- **Ecos:** evocar, pôr em campo conforme o rank, fundir 3→1 em 5 graus.
+- **Economia entre jogadores:** mercado com taxa de 5% e troca direta com dupla confirmação.
+- **Guildas:** cargos, doações, nível com bônus de EXP, mural e chat próprio.
+- **Chat:** canais geral, guilda, grupo e sussurro; filtro de ofensas e links, anti-repetição, denúncia e
+  comandos de moderação (`/mute`, `/unmute`, `/kick`, `/ban`).
+- **Cristais:** moeda premium só de conveniência, com pedidos e extrato; ver pendências abaixo.
+- **Descanso:** sair do jogo durante uma caçada solo de 3+ minutos rende EXP e ouro por até 8 horas.
+
+## Pendências antes de abrir ao público
+
+- **Pagamento real:** o fluxo de pedido, confirmação idempotente e extrato está pronto e testado com um provedor
+  simulado. Falta o adaptador de um provedor real (Pix ou cartão), que depende de credenciais e de empresa formalizada.
+  Preços dos pacotes em `shared/content.ts` são provisórios.
+- **E-mail:** configurar `RESEND_API_KEY`/`MAIL_FROM` (ou trocar o provedor em `server/src/mail.ts`).
+- **Jurídico e LGPD:** termos de uso, política de privacidade, regras para menores e para compras; validar com advogado.
+  O chat é registrado por 30 dias para apurar denúncias (sussurros não são registrados).
+- **Escala:** um único processo guarda o estado do jogo em memória; para muitos jogadores simultâneos será preciso
+  dividir em mais processos.
+- **Arte:** personagens e monstros são imagens únicas animadas pelo motor; ver `tools/ai-assets/README.md`.
 
 ## Estrutura
 
 | Pasta | Conteúdo |
 |---|---|
-| `shared/content.ts` | Todas as regras e números do jogo (classes, monstros, fendas, itens, fórmulas) |
+| `shared/content.ts` | Todas as regras e números do jogo |
 | `shared/assets.ts` | Manifesto de assets: caminho, formato e descrição de cada um |
 | `shared/protocol.ts` | Mensagens entre cliente e servidor |
-| `server/src` | Contas, banco, cidade e simulação das caçadas (o servidor decide tudo) |
+| `server/src` | Contas, banco, mundo, simulação, moderação, e-mail e pagamentos (o servidor decide tudo) |
+| `server/migrations` | Esquema do PostgreSQL |
 | `client/src` | Cena em Phaser e interface em HTML |
-| `docs/prompts-assets` | Um prompt por asset, gerado por `npm run prompts` |
-
-## Assets
-
-O jogo roda sem arte: cada asset ausente vira um marcador desenhado por código. Para usar a sua arte, gere a imagem
-com o prompt correspondente em [`docs/prompts-assets`](docs/prompts-assets/README.md) e salve o PNG no caminho
-indicado, dentro de `client/public/assets/`. Depois rode `npm run build` (ou reinicie o `npm run dev:client`).
+| `tools/ai-assets` | Scripts que geram os assets |
+| `docs/prompts-assets` | Um prompt por asset, para refazer em outra ferramenta |

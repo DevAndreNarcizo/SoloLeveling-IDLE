@@ -54,6 +54,9 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (this.room?.kind !== 'city') return
       const w = p.positionToCamera(this.cameras.main) as Phaser.Math.Vector2
+      for (const v of this.views.values()) {
+        if (v.ent.k === 'p' && !v.ent.me && v.ent.n && Math.hypot(v.box.x - w.x, v.box.y - 40 - w.y) < 44) { this.game.events.emit('player', v.ent.n); return }
+      }
       const npc = NPCS.find((n) => Math.hypot(n.x - w.x, n.y - 48 - w.y) < 56)
       this.dest = npc ? { x: npc.x, y: npc.y + 46 } : { x: w.x, y: w.y }
     })
@@ -139,10 +142,10 @@ export class GameScene extends Phaser.Scene {
     if (this.textures.exists(propsKey)) {
       let s = hash(room.map)
       const rnd = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296 }
-      for (let i = 0; i < 26; i++) {
+      for (let i = 0; i < 15; i++) {
         const x = 40 + rnd() * (room.w - 80), y = 40 + rnd() * (room.h - 80)
         if (room.kind === 'city' && NPCS.some((n) => Math.hypot(n.x - x, n.y - y) < 110)) continue
-        this.decor.push(this.add.image(x, y, propsKey, Math.floor(rnd() * 4)).setDisplaySize(104, 104).setOrigin(0.5, 0.9).setDepth(y))
+        this.decor.push(this.add.image(x, y, propsKey, Math.floor(rnd() * 4)).setDisplaySize(92, 92).setOrigin(0.5, 0.9).setDepth(y))
       }
     }
     if (room.kind === 'city') {
@@ -173,7 +176,7 @@ export class GameScene extends Phaser.Scene {
         if (e.k === 'e') sprite.setTint(0x8a6cff).setAlpha(0.88)
         if (e.n && e.k !== 'c') {
           const color = e.k === 'p' ? (e.me ? '#ffffff' : '#c9c3e6') : e.k === 'e' ? '#b79cff' : e.mk === 'chefe' ? '#ff6b7a' : e.mk === 'elite' ? '#ffcf5c' : '#d7d3e8'
-          const label = e.k === 'p' && e.r ? `[${e.r}] ${e.n}` : e.n
+          const label = e.k === 'p' && e.r ? `[${e.r}] ${e.g ? `<${e.g}> ` : ''}${e.n}` : e.n
           box.add(this.add.text(0, -size * 0.92 - 12, label, { fontSize: '11px', color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5))
         }
         v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX }
@@ -182,6 +185,7 @@ export class GameScene extends Phaser.Scene {
       }
       v.tx = e.x; v.ty = e.y; v.ent = e; v.seen = this.snapN
       if (e.k === 'c') v.sprite.setAlpha(e.hp ? 1 : 0.35)
+      else if (e.k === 'p') { if (e.sh) v.sprite.setTint(0x9fd8ff); else v.sprite.clearTint() }
       if (v.bar) {
         const w = e.mk === 'chefe' ? 90 : 46, y = -v.sprite.displayHeight * 0.92 - 4
         v.bar.clear().fillStyle(0x000000, 0.7).fillRect(-w / 2 - 1, y - 1, w + 2, 6)
@@ -219,8 +223,15 @@ export class GameScene extends Phaser.Scene {
         } else this.burst('efeitos/golpe', bx, by, 90)
       }
       const mine = b.ent.me
-      this.floatText(bx, by - 14, `${f.crit ? '✦' : ''}${f.dmg}`, mine ? '#ff6b7a' : f.crit ? '#ffcf5c' : '#ffffff', f.crit ? 18 : 13)
+      this.floatText(bx, by - 14, `${f.crit ? '✦' : ''}${f.dmg}`, mine ? '#ff6b7a' : f.skill ? '#7df2ff' : f.crit ? '#ffcf5c' : '#ffffff', f.skill ? 19 : f.crit ? 18 : 13)
       this.tweens.add({ targets: b.sprite, alpha: 0.5, duration: 50, yoyo: true })
+    } else if (f.f === 'skill') {
+      const v = this.views.get(f.id)
+      if (v) this.floatText(v.box.x, v.box.y - v.sprite.displayHeight - 4, f.name, '#7df2ff', 13)
+      if (f.x !== undefined && f.y !== undefined && f.r) {
+        const ring = this.add.circle(f.x, f.y, f.r, 0x8b5cf6, 0.22).setStrokeStyle(2, 0xc4a3ff, 0.9).setDepth(8990).setScale(0.3)
+        this.tweens.add({ targets: ring, scale: 1, alpha: 0, duration: 380, onComplete: () => ring.destroy() })
+      }
     } else if (f.f === 'heal') {
       const v = this.views.get(f.to); if (v) this.floatText(v.box.x, v.box.y - 50, `+${f.amount}`, '#5fd38a')
     } else if (f.f === 'level') {

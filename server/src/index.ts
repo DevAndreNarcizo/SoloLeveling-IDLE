@@ -163,7 +163,7 @@ export async function startServer(opt: ServerOptions = {}) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   startServer().then(({ port, stop }) => {
-    console.log(`Servidor do jogo em http://localhost:${port} (${process.env.DATABASE_URL ? 'PostgreSQL' : 'Postgres embutido em data/pg'})`)
+    console.log(`Servidor do jogo em http://localhost:${port} (${/^postgres/.test(process.env.DATABASE_URL ?? '') ? 'PostgreSQL remoto' : 'Postgres embutido'})`)
     for (const sig of ['SIGINT', 'SIGTERM'] as const) process.on(sig, () => { stop().then(() => process.exit(0)) })
   })
 }
