@@ -23,7 +23,7 @@ const add = (category: string, format: AssetFormat, dir: string, rows: [id: stri
   for (const [id, title, subject, optional] of rows) list.push({ id: `${dir}/${id}`, path: `${dir}/${id}.png`, format, category, title, subject, ...(optional ? { optional } : {}) })
 }
 
-add('Caçadores (classes)', 'sheet', 'cacadores', [
+add('Caçadores (classes)', 'image', 'cacadores', [
   ['lamina', 'Caçador Lâmina', 'a sturdy hunter in a dark charcoal combat coat with steel shoulder guard, carrying a broad one-handed sword, short dark hair, violet glowing trim on the coat'],
   ['vulto', 'Caçador Vulto', 'a lean agile hunter in a black hooded jacket and face scarf, holding two short daggers in reverse grip, teal glowing trim'],
   ['arcanista', 'Caçador Arcanista', 'a slim hunter in a long dark indigo coat with a high collar, holding a short metal staff tipped with a floating violet crystal, silver hair'],
@@ -35,7 +35,7 @@ add('NPCs da cidade', 'image', 'npcs', [
   ['ferreira', 'Dária, a Ferreira', 'a muscular blacksmith woman with a leather apron, soot on her arms, holding a hammer on her shoulder, facing the viewer'],
   ['arquivista', 'Noé, o Arquivista', 'a thin elderly archivist with round glasses, grey robe, carrying a large book and a quill, facing the viewer'],
 ])
-add('Monstros comuns', 'sheet', 'monstros', [
+add('Monstros comuns', 'image', 'monstros', [
   ['larva-de-ferrugem', 'Larva de Ferrugem', 'a fat segmented grub the size of a dog with rust-orange metal plates on its back and small mandibles'],
   ['morcego-de-cinza', 'Morcego de Cinza', 'a large grey bat with tattered wings that shed ash particles, glowing ember-orange eyes'],
   ['catador-oco', 'Catador Oco', 'a hunched hollow-eyed humanoid scavenger made of dark rags and mining scrap, carrying a rusty pickaxe, an empty glowing-blue chest cavity'],
@@ -49,7 +49,7 @@ add('Monstros comuns', 'sheet', 'monstros', [
   ['golem-de-escoria', 'Golem de Escória', 'a bulky golem made of cooled black slag with cracks of molten orange, heavy fists'],
   ['serpe-de-cinza', 'Serpe de Cinza', 'a small wingless ash-grey wyvern-like lizard walking on four legs with smoking nostrils and charcoal scales'],
 ])
-add('Chefes (opcionais)', 'sheet', 'monstros', [
+add('Chefes (opcionais)', 'image', 'monstros', [
   ['larva-mae', 'Larva-Mãe', 'a huge bloated grub queen with thick rust-orange armor plates, many small legs and a crown of jagged metal spikes', true],
   ['asa-ancia', 'Asa Anciã', 'a giant ancient bat with scarred torn wings, a mane of white fur and burning orange eyes, ash falling from its wings', true],
   ['capataz-oco', 'Capataz Oco', 'a tall hollow humanoid foreman in a tattered long coat and a cracked mining helmet with a lamp, wielding a heavy chain, glowing blue chest cavity', true],
@@ -80,7 +80,7 @@ add('Mapas: objetos de cenário', 'props', 'mapas', [
 ])
 add('Objetos do mundo', 'image', 'objetos', [
   ['fenda', 'Fenda (portal)', 'a vertical oval tear in space, a swirling violet-and-cyan vortex with a bright rim and small floating shards around it'],
-  ['resquicio', 'Resquício (corpo para evocar)', 'a small pile of dark smoky remains on the ground with a faint violet wisp rising from it'],
+  ['resquicio', 'Resquício (corpo para evocar)', 'a small heap of black ashes and dark crystal shards with a thin violet wisp of smoke rising from it'],
 ])
 add('Efeitos', 'fx', 'efeitos', [
   ['golpe', 'Golpe corpo a corpo', 'a white-violet crescent slash arc, four animation frames in reading order: thin start, full arc, fading arc, small sparks'],

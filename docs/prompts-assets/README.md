@@ -8,6 +8,9 @@ passa a ser usado automaticamente na próxima vez que a página carregar.
 
 ## Como gerar com consistência no ChatGPT
 
+0. **Já existe uma versão gerada.** Os assets atuais foram feitos por `tools/ai-assets/fetch.py` (gerador gratuito
+   Pollinations + recorte de fundo local) e `tools/ai-assets/effects.py`. Use os prompts abaixo para refazer qualquer
+   um em outra ferramenta, com mais qualidade.
 1. **Comece pela âncora de estilo.** Gere primeiro `cacadores/lamina`. Refaça até gostar: ele define a paleta e o traço.
 2. **Use a âncora como referência.** Em cada novo pedido, anexe o PNG aprovado e acrescente no início do prompt:
    `Match the exact pixel art style, palette and outline of the attached reference image.`
@@ -15,13 +18,13 @@ passa a ser usado automaticamente na próxima vez que a página carregar.
    `Regenerate with a real transparent background (alpha channel).`
 4. **Um asset por conversa de imagem.** Não peça vários arquivos numa mesma imagem, exceto as folhas descritas no prompt.
 5. **Confira a grade das folhas.** O jogo divide a imagem em partes iguais (4×4 ou 2×2). Se um quadro sair fora da
-   célula, peça a correção ou ajuste num editor de pixel art (Aseprite, LibreSprite, Piskel).
+   célula, peça a correção ou ajuste num editor de imagem.
 6. **Não precisa redimensionar.** O jogo aceita qualquer resolução, desde que a grade seja a pedida.
 
 ## Limites conhecidos
 
-- Geradores de imagem nem sempre entregam grade exata nem pixel art "de verdade" (pixels alinhados). Para sprites
-  animados, espere retoques manuais. Os prompts reduzem o problema, mas não o eliminam.
+- Personagens e monstros são uma imagem única: o jogo anima o andar com balanço e espelhamento. Animação quadro a
+  quadro exigiria folhas de sprites consistentes, que geradores de imagem genéricos não entregam bem.
 - Os prompts descrevem criaturas e personagens originais deste jogo. Não acrescente nomes de obras, personagens ou
   artistas existentes ao prompt.
 - Confira os termos de uso da ferramenta de imagem para uso comercial antes de publicar o jogo.

@@ -8,7 +8,7 @@
 ## Prompt (copie e cole no ChatGPT)
 
 ```text
-2D pixel art game asset in 16-bit JRPG style. Crisp hard-edged pixels, visible pixel grid, no anti-aliasing, no blur, no smooth gradients, no photorealism, no 3D render. Limited palette of about 24 colors: near-black, charcoal, deep violet and indigo as base, with small cyan, violet or amber glowing accents. Dark modern-fantasy mood. 1-pixel dark outline around every shape. Light source from the top-left. No text, no letters, no numbers, no watermark, no signature, no UI frame.
+Dark fantasy RPG game art, anime style illustration, highly detailed, sharp focus, dramatic rim light. Rich but dark palette: charcoal, deep violet and indigo, with cyan, violet or amber glowing accents. No text, no letters, no numbers, no watermark, no signature, no UI frame.
 
 Subject: a dark violet shadow rising from the ground as a pillar of smoke with cyan sparks, four animation frames in reading order: ground circle, rising, peak, dissipating.
 

@@ -11,16 +11,20 @@
     "start": "tsx server/src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "prompts": "tsx tools/gen-prompts.ts",
-    "assets": "tsx tools/gen-assets.ts"
+    "prompts": "tsx tools/gen-prompts.ts"
   },
-  "engines": { "node": ">=22.13" },
+  "engines": {
+    "node": ">=22.13"
+  },
   "dependencies": {
-    "ws": "^8.18.0",
-    "tsx": "^4.19.0"
+    "@electric-sql/pglite": "^0.5.16",
+    "pg": "^8.23.1",
+    "tsx": "^4.19.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/pg": "^8.23.1",
     "@types/ws": "^8.5.13",
     "phaser": "^3.87.0",
     "typescript": "^5.7.0",

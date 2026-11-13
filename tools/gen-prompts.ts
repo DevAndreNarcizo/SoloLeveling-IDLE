@@ -9,10 +9,8 @@ import { GAME_NAME } from '../shared/content.ts'
 const OUT = resolve(fileURLToPath(import.meta.url), '../../docs/prompts-assets')
 
 const STYLE = [
-  '2D pixel art game asset in 16-bit JRPG style.',
-  'Crisp hard-edged pixels, visible pixel grid, no anti-aliasing, no blur, no smooth gradients, no photorealism, no 3D render.',
-  'Limited palette of about 24 colors: near-black, charcoal, deep violet and indigo as base, with small cyan, violet or amber glowing accents.',
-  'Dark modern-fantasy mood. 1-pixel dark outline around every shape. Light source from the top-left.',
+  'Dark fantasy RPG game art, anime style illustration, highly detailed, sharp focus, dramatic rim light.',
+  'Rich but dark palette: charcoal, deep violet and indigo, with cyan, violet or amber glowing accents.',
   'No text, no letters, no numbers, no watermark, no signature, no UI frame.',
 ].join(' ')
 const TRANSPARENT = 'Fully transparent background (PNG with alpha). No ground shadow, no floor, no backdrop.'
@@ -35,9 +33,9 @@ const FORMAT: Record<AssetFormat, { size: string; pt: string; spec: (a: AssetDef
     ],
   },
   image: {
-    size: '1024x1024', pt: 'Sprite único, fundo transparente',
-    spec: () => `Output: a single sprite centered on a square 1024x1024 canvas, top-down 3/4 view (classic RPG overworld camera), occupying about 70% of the canvas. ${TRANSPARENT}`,
-    check: ['Um único objeto centralizado.', 'O fundo é transparente.'],
+    size: '1024x1024', pt: 'Imagem única de corpo inteiro, fundo transparente',
+    spec: () => `Output: a single full-body subject centered on a square 1024x1024 canvas, standing, front three-quarter view, feet near the bottom edge, occupying about 85% of the canvas height. ${TRANSPARENT}`,
+    check: ['Um único personagem ou objeto, de corpo inteiro, sem cortes.', 'O fundo é transparente.', 'Legível em tamanho pequeno (cerca de 96 px de altura).'],
   },
   tile: {
     size: '1024x1024', pt: 'Textura de chão contínua (repetível), opaca',
@@ -112,6 +110,9 @@ passa a ser usado automaticamente na próxima vez que a página carregar.
 
 ## Como gerar com consistência no ChatGPT
 
+0. **Já existe uma versão gerada.** Os assets atuais foram feitos por \`tools/ai-assets/fetch.py\` (gerador gratuito
+   Pollinations + recorte de fundo local) e \`tools/ai-assets/effects.py\`. Use os prompts abaixo para refazer qualquer
+   um em outra ferramenta, com mais qualidade.
 1. **Comece pela âncora de estilo.** Gere primeiro \`cacadores/lamina\`. Refaça até gostar: ele define a paleta e o traço.
 2. **Use a âncora como referência.** Em cada novo pedido, anexe o PNG aprovado e acrescente no início do prompt:
    \`Match the exact pixel art style, palette and outline of the attached reference image.\`
@@ -119,13 +120,13 @@ passa a ser usado automaticamente na próxima vez que a página carregar.
    \`Regenerate with a real transparent background (alpha channel).\`
 4. **Um asset por conversa de imagem.** Não peça vários arquivos numa mesma imagem, exceto as folhas descritas no prompt.
 5. **Confira a grade das folhas.** O jogo divide a imagem em partes iguais (4×4 ou 2×2). Se um quadro sair fora da
-   célula, peça a correção ou ajuste num editor de pixel art (Aseprite, LibreSprite, Piskel).
+   célula, peça a correção ou ajuste num editor de imagem.
 6. **Não precisa redimensionar.** O jogo aceita qualquer resolução, desde que a grade seja a pedida.
 
 ## Limites conhecidos
 
-- Geradores de imagem nem sempre entregam grade exata nem pixel art "de verdade" (pixels alinhados). Para sprites
-  animados, espere retoques manuais. Os prompts reduzem o problema, mas não o eliminam.
+- Personagens e monstros são uma imagem única: o jogo anima o andar com balanço e espelhamento. Animação quadro a
+  quadro exigiria folhas de sprites consistentes, que geradores de imagem genéricos não entregam bem.
 - Os prompts descrevem criaturas e personagens originais deste jogo. Não acrescente nomes de obras, personagens ou
   artistas existentes ao prompt.
 - Confira os termos de uso da ferramenta de imagem para uso comercial antes de publicar o jogo.
@@ -144,5 +145,5 @@ ${[...byCat].map(([cat, items]) => `### ${cat} (${items.length})\n\n| Asset | Ar
 `
 writeFileSync(join(OUT, 'README.md'), index)
 // Manifesto em JSON para o gerador local de imagens (tools/ai-assets/generate.py).
-writeFileSync(resolve(OUT, '../../tools/ai-assets/manifest.json'), JSON.stringify(ASSETS.map(({ id, path, format, subject }) => ({ id, path, format, subject })), null, 1))
+writeFileSync(resolve(OUT, '../../tools/ai-assets/manifest.json'), JSON.stringify(ASSETS.map(({ id, path, format, subject, optional }) => ({ id, path, format, subject, ...(optional ? { optional } : {}) })), null, 1))
 console.log(`${ASSETS.length} prompts gerados em docs/prompts-assets/`)
