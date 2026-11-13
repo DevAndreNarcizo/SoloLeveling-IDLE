@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#07060d" />
+<title>Umbral Idle</title>
+<meta name="description" content="MMO idle 2D de caçadores: entre nas fendas, evolua seu caçador e monte um exército de ecos." />
+<link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+<div id="game"></div>
+
+<section id="auth" class="screen">
+  <form class="card" id="authForm" autocomplete="on">
+    <h1 id="gameTitle">Umbral Idle</h1>
+    <p class="muted">MMO idle de caçadores. Seu caçador luta sozinho nas fendas.</p>
+    <div class="tabs"><button type="button" id="tabLogin" class="on">Entrar</button><button type="button" id="tabRegister">Criar conta</button></div>
+    <label>Usuário<input id="user" name="username" autocomplete="username" minlength="3" maxlength="16" required /></label>
+    <label>Senha<input id="pass" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="72" required /></label>
+    <p class="hint" id="authHint">A conta usa só usuário e senha. Não pedimos e-mail; por isso, ainda não há recuperação de senha.</p>
+    <p class="error" id="authError" role="alert"></p>
+    <button class="primary" id="authSubmit">Entrar</button>
+  </form>
+</section>
+
+<section id="create" class="screen hidden">
+  <form class="card wide" id="createForm">
+    <h2>Crie o seu caçador</h2>
+    <label>Nome do caçador<input id="charName" minlength="3" maxlength="16" required /></label>
+    <div id="classCards" class="classCards"></div>
+    <p class="error" id="createError" role="alert"></p>
+    <button class="primary">Começar a caçar</button>
+  </form>
+</section>
+
+<div id="hud" class="hidden">
+  <div id="me" class="box"></div>
+  <div id="roomBar" class="box"></div>
+  <div id="log" class="box" aria-live="polite"></div>
+  <div id="chat" class="box">
+    <div id="chatLines"></div>
+    <form id="chatForm"><input id="chatInput" maxlength="160" placeholder="Enter para conversar" autocomplete="off" /></form>
+  </div>
+  <nav id="menu"></nav>
+  <div id="hint" class="hidden"></div>
+</div>
+
+<div id="panel" class="hidden" role="dialog" aria-modal="false">
+  <header><h3 id="panelTitle"></h3><button id="panelClose" aria-label="Fechar">×</button></header>
+  <div id="panelBody"></div>
+</div>
+<div id="toast" class="hidden"></div>
+<div id="modal" class="hidden"><div class="card"><h2 id="modalTitle"></h2><p id="modalText"></p><button class="primary" id="modalOk">Continuar</button></div></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
