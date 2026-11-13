@@ -36,7 +36,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
   },
   vulto: {
     id: 'vulto', name: 'Vulto', desc: 'Corpo a corpo veloz. Muitos golpes e muitos críticos.',
-    primary: 'for', dmgMult: 0.78, atkPerSec: 1.5, range: 42, hpBase: 190, hpPerLevel: 27,
+    primary: 'for', dmgMult: 0.78, atkPerSec: 1.5, range: 42, hpBase: 215, hpPerLevel: 30,
     start: { for: 12, agi: 14, vit: 8, int: 4, per: 10 }, projectile: 'none',
   },
   arcanista: {
@@ -177,6 +177,7 @@ export interface Item {
   atk?: number; def?: number; hp?: number; attrs?: Partial<Record<Attr, number>>
 }
 export const INVENTORY_SIZE = 40
+export const bagSize = (c: { bagExtra?: number }) => INVENTORY_SIZE + (c.bagExtra ?? 0)
 export const MAX_ENCHANT = 10
 export const ENCHANT_BONUS = 0.06
 /** Chance de sucesso para ir de +n a +n+1. Falhar gasta os materiais, mas nunca rebaixa a peça. */
@@ -274,6 +275,7 @@ export interface Character {
   items: Item[]; equipped: Partial<Record<Slot, Item>>
   echoes: Echo[]; team: string[]; autoExtract: boolean
   kills: number; nextId: number
+  talents?: Record<string, number>; expBoostUntil?: number; bagExtra?: number
   rest?: { expPerMin: number; goldPerMin: number; since: number }
 }
 export function newCharacter(name: string, cls: ClassId): Character {
@@ -298,11 +300,12 @@ export function derive(c: Character): Derived {
     gearAtk += itemStat(it, 'atk'); gearDef += itemStat(it, 'def'); gearHp += itemStat(it, 'hp')
     for (const a of ATTRS) attrs[a] += it.attrs?.[a] ?? 0
   }
-  const maxHp = Math.round((cls.hpBase + cls.hpPerLevel * c.level) * (1 + attrs.vit / 200) + gearHp)
-  const atk = Math.round(attrs[cls.primary] * 1.6 + c.level * 2 + gearAtk)
-  const def = Math.round(attrs.vit * 0.7 + gearDef)
-  const crit = Math.min(0.5, 0.05 + attrs.per * 0.0015)
-  const atkPerSec = cls.atkPerSec * (1 + Math.min(attrs.agi, 400) / 800)
+  const t = talentBonus(c)
+  const maxHp = Math.round(((cls.hpBase + cls.hpPerLevel * c.level) * (1 + attrs.vit / 200) + gearHp) * (1 + t.hpPct))
+  const atk = Math.round((attrs[cls.primary] * 1.6 + c.level * 2 + gearAtk) * (1 + t.atkPct))
+  const def = Math.round((attrs.vit * 0.7 + gearDef) * (1 + t.defPct))
+  const crit = Math.min(0.6, 0.05 + attrs.per * 0.0015 + t.critAdd)
+  const atkPerSec = cls.atkPerSec * (1 + Math.min(attrs.agi, 400) / 800) * (1 + t.aspdPct)
   const speed = 120 + Math.min(attrs.agi, 300) * 0.15
   const power = Math.round(atk * cls.dmgMult * atkPerSec * (1 + crit * 0.6) * 3 + maxHp * 0.25 + def * 2)
   return { maxHp, atk, def, crit, critMult: 1.6, atkPerSec, speed, range: cls.range, power, attrs }
@@ -329,3 +332,96 @@ export function findBand(riftId: string, bandIndex: number): { rift: RiftDef; ba
   const band = rift?.bands[bandIndex]
   return rift && band ? { rift, band } : null
 }
+
+// ---------- Talentos ----------
+export type TalentStat = 'atkPct' | 'critAdd' | 'aspdPct' | 'skillPct' | 'hpPct' | 'defPct' | 'potionPct' | 'guardPct' | 'extractPct' | 'echoAtkPct' | 'echoHpPct' | 'expPct'
+export type TalentPath = 'ofensiva' | 'defensiva' | 'evocacao'
+export const TALENT_PATHS: Record<TalentPath, string> = { ofensiva: 'Senda Ofensiva', defensiva: 'Senda Defensiva', evocacao: 'Senda da Evocação' }
+export interface TalentDef { id: string; name: string; path: TalentPath; tier: number; stat: TalentStat; per: number; desc: string }
+export const TALENT_MAX = 5
+export const TALENT_TIER_POINTS = 3 // pontos na senda exigidos por degrau
+const tl = (id: string, name: string, path: TalentPath, tier: number, stat: TalentStat, per: number, desc: string): TalentDef => ({ id, name, path, tier, stat, per, desc })
+export const TALENTS: TalentDef[] = [
+  tl('fio', 'Fio Afiado', 'ofensiva', 0, 'atkPct', 0.03, '+3% de ataque por nível.'),
+  tl('olho', 'Olho Clínico', 'ofensiva', 1, 'critAdd', 0.02, '+2% de chance de crítico por nível.'),
+  tl('ritmo', 'Ritmo de Caça', 'ofensiva', 2, 'aspdPct', 0.03, '+3% de velocidade de ataque por nível.'),
+  tl('dominio', 'Domínio', 'ofensiva', 3, 'skillPct', 0.06, '+6% de dano das habilidades por nível.'),
+  tl('folego', 'Fôlego', 'defensiva', 0, 'hpPct', 0.04, '+4% de vida máxima por nível.'),
+  tl('couraca', 'Couraça', 'defensiva', 1, 'defPct', 0.05, '+5% de defesa por nível.'),
+  tl('alquimia', 'Alquimia de Campo', 'defensiva', 2, 'potionPct', 0.08, 'Poções curam 8% a mais por nível.'),
+  tl('tenacidade', 'Tenacidade', 'defensiva', 3, 'guardPct', 0.02, '-2% de dano recebido por nível.'),
+  tl('chamado', 'Chamado', 'evocacao', 0, 'extractPct', 0.1, '+10% na chance de evocar ecos por nível.'),
+  tl('presas', 'Presas do Eco', 'evocacao', 1, 'echoAtkPct', 0.06, '+6% de ataque dos ecos por nível.'),
+  tl('vinculo', 'Vínculo', 'evocacao', 2, 'echoHpPct', 0.08, '+8% de vida dos ecos por nível.'),
+  tl('colheita', 'Colheita', 'evocacao', 3, 'expPct', 0.02, '+2% de EXP por nível.'),
+]
+export const TALENT_BY_ID: Record<string, TalentDef> = Object.fromEntries(TALENTS.map((t) => [t.id, t]))
+export type TalentBonus = Record<TalentStat, number>
+export function talentBonus(c: { talents?: Record<string, number> }): TalentBonus {
+  const b: TalentBonus = { atkPct: 0, critAdd: 0, aspdPct: 0, skillPct: 0, hpPct: 0, defPct: 0, potionPct: 0, guardPct: 0, extractPct: 0, echoAtkPct: 0, echoHpPct: 0, expPct: 0 }
+  for (const [id, n] of Object.entries(c.talents ?? {})) { const t = TALENT_BY_ID[id]; if (t) b[t.stat] += t.per * n }
+  return b
+}
+/** 1 ponto de talento por nível a partir do nível 2. */
+export function talentPoints(c: Character) {
+  const spent = Object.values(c.talents ?? {}).reduce((a, n) => a + n, 0)
+  return { total: c.level - 1, spent, free: c.level - 1 - spent }
+}
+export function pathPoints(c: Character, path: TalentPath) {
+  return TALENTS.filter((t) => t.path === path).reduce((a, t) => a + (c.talents?.[t.id] ?? 0), 0)
+}
+export const talentResetCost = (c: Character) => 60 * c.level
+
+// ---------- Habilidades ativas ----------
+export type BuffKind = 'guard' | 'haste' | 'shield' | 'focus'
+export interface SkillDef { id: string; name: string; level: number; cd: number; kind: 'hit' | 'aoe' | 'buff'; mult?: number; radius?: number; buff?: BuffKind; seconds?: number; desc: string }
+const sk = (id: string, name: string, level: number, cd: number, kind: SkillDef['kind'], extra: Partial<SkillDef>, desc: string): SkillDef => ({ id, name, level, cd, kind, desc, ...extra })
+export const SKILLS: Record<ClassId, SkillDef[]> = {
+  lamina: [
+    sk('golpe-pesado', 'Golpe Pesado', 3, 6, 'hit', { mult: 2.5 }, 'Um golpe de 250% do ataque.'),
+    sk('giro', 'Giro de Aço', 10, 10, 'aoe', { mult: 1.4, radius: 95 }, '140% do ataque em todos ao redor do alvo.'),
+    sk('postura', 'Postura de Ferro', 20, 20, 'buff', { buff: 'guard', seconds: 6 }, 'Recebe 40% menos dano por 6 s.'),
+  ],
+  vulto: [
+    sk('perfurar', 'Perfurar', 3, 5, 'hit', { mult: 2.2 }, 'Um golpe de 220% do ataque.'),
+    sk('leque', 'Leque de Lâminas', 10, 9, 'aoe', { mult: 1.2, radius: 90 }, '120% do ataque em todos ao redor do alvo.'),
+    sk('passo', 'Passo Sombrio', 20, 18, 'buff', { buff: 'haste', seconds: 6 }, '+60% de velocidade de ataque por 6 s.'),
+  ],
+  arcanista: [
+    sk('lanca', 'Lança Arcana', 3, 6, 'hit', { mult: 2.6 }, 'Um disparo de 260% do ataque.'),
+    sk('explosao', 'Explosão Arcana', 10, 11, 'aoe', { mult: 1.7, radius: 110 }, '170% do ataque em todos ao redor do alvo.'),
+    sk('barreira', 'Barreira', 20, 22, 'buff', { buff: 'shield', seconds: 10 }, 'Escudo que absorve 25% da vida máxima por 10 s.'),
+  ],
+  atirador: [
+    sk('tiro-certeiro', 'Tiro Certeiro', 3, 6, 'hit', { mult: 2.4 }, 'Um disparo de 240% do ataque.'),
+    sk('chuva', 'Chuva de Flechas', 10, 10, 'aoe', { mult: 1.3, radius: 100 }, '130% do ataque em todos ao redor do alvo.'),
+    sk('foco', 'Foco', 20, 20, 'buff', { buff: 'focus', seconds: 8 }, '+30% de chance de crítico por 8 s.'),
+  ],
+}
+
+// ---------- Grupo, arena, guilda, mercado ----------
+export const PARTY_MAX = 4
+export const PARTY_SHARE = 0.75 // parte da EXP e do ouro que cada membro recebe em grupo
+export const ARENA = { minLevel: 10, seconds: 90, hpMult: 3, k: 24, startRating: 1000 }
+export const GUILD = { cost: 2000, minLevel: 10, maxMembers: 30, maxLevel: 10, expPerLevel: 0.01 }
+/** Fundos acumulados para a guilda chegar ao nível n. */
+export const guildFundsFor = (level: number) => 5000 * (level - 1) * (level - 1)
+export const MARKET = { minLevel: 10, tax: 0.05, maxListings: 10, pageSize: 40, maxPrice: 1_000_000_000 }
+
+// ---------- Loja de cristais (moeda comprada com dinheiro real) ----------
+// Só conveniência: nada aqui dá atributo de combate que não exista jogando.
+export const PREMIUM = {
+  boost: { name: 'Impulso de EXP (1 h)', price: 30, desc: '+50% de EXP nos abates por 1 hora. Acumula tempo.' },
+  mochila: { name: 'Expansão da mochila', price: 60, desc: '+10 espaços na mochila (até 5 vezes).' },
+  talentos: { name: 'Redefinir talentos', price: 40, desc: 'Devolve todos os pontos de talento, sem custo em ouro.' },
+  classe: { name: 'Mudar de classe', price: 150, desc: 'Troca a classe. Atributos e talentos são devolvidos; a arma equipada volta para a mochila.' },
+} as const
+export type PremiumId = keyof typeof PREMIUM
+export const BOOST_EXP = 0.5
+export const BAG_EXPANSIONS = 5
+/** Pacotes de cristais. Preços em centavos de real: valores provisórios, a validar antes de vender. */
+export const CRYSTAL_PACKS = [
+  { id: 'p100', crystals: 100, cents: 490, name: '100 cristais' },
+  { id: 'p550', crystals: 550, cents: 2490, name: '550 cristais' },
+  { id: 'p1200', crystals: 1200, cents: 4990, name: '1.200 cristais' },
+] as const

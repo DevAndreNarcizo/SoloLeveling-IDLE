@@ -17,7 +17,7 @@ const store = {
 document.title = GAME_NAME
 $('gameTitle').textContent = GAME_NAME
 if (hasAsset('ui/fundo-login')) for (const id of ['auth', 'create']) $(id).style.backgroundImage = `linear-gradient(rgba(7,6,13,.55), rgba(7,6,13,.85)), url(${assetUrl('ui/fundo-login')})`
-if (hasAsset('ui/logo')) $('gameTitle').before(Object.assign(document.createElement('img'), { src: assetUrl('ui/logo'), alt: '', style: 'width:100%;image-rendering:pixelated' }))
+if (hasAsset('ui/logo')) $('gameTitle').before(Object.assign(document.createElement('img'), { src: assetUrl('ui/logo'), alt: '', style: 'width:60%;justify-self:center' }))
 if (hasAsset('ui/favicon')) document.head.append(Object.assign(document.createElement('link'), { rel: 'icon', type: 'image/png', href: assetUrl('ui/favicon') }))
 
 // ---------- Conta ----------
