@@ -72,7 +72,7 @@ add('Mapas (montados por tools/ai-assets/maps.py)', 'map', 'mapas', [
   ['arena', 'Mapa da arena', 'training arena: clean dark grey floor, a large painted circle and center line, violet edge lights, low walls around'],
 ])
 add('Mapas: objetos de cenário', 'props', 'mapas', [
-  ['cidade-objetos', 'Objetos da cidade', 'four separate props, one per cell: a street lamp with violet light, a stone bench, a notice board, a potted dark shrub'],
+  ['cidade-objetos', 'Objetos da cidade', 'four separate props, one per cell: an iron street lamp post with a glowing violet lantern, a wooden park bench, a stone water fountain, a wooden market stall with a striped awning'],
   ['minas-ocas-objetos', 'Objetos das Minas Ocas', 'four separate props, one per cell: a broken mine cart, a wooden support beam, a pile of ore rocks, a hanging oil lantern on a post'],
   ['bosque-cinzento-objetos', 'Objetos do Bosque Cinzento', 'four separate props, one per cell: a dead grey tree, a mossy boulder, a thorn bush, a fallen log'],
   ['cidadela-afundada-objetos', 'Objetos da Cidadela Afundada', 'four separate props, one per cell: a broken stone pillar, a barnacle-covered statue, a rusted iron gate fragment, a coral cluster'],

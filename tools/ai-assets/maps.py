@@ -215,7 +215,7 @@ def cidade():
     inside = wall(img, rng, 26, [(22, 20, 36), (30, 28, 48), (40, 36, 60), (52, 46, 74)])
     d = edge_dist(w, h)
     paint(img, (np.abs(d - 33) < 1.5) & ((x // 10 + y // 10) % 3 == 0), (255, 200, 110))  # janelas iluminadas na borda
-    place_props(img, "cidade", rng, border_free(w, h, inside, 28, 110) & ~road, 20, 120)
+    place_props(img, "cidade", rng, border_free(w, h, inside, 28, 90) & ~road, 14, 150)
     save("cidade", img)
 
 if __name__ == "__main__":

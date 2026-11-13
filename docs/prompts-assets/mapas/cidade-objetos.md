@@ -10,7 +10,7 @@
 ```text
 16-bit JRPG pixel art, crisp hard-edged pixels, bold dark outline, flat cel shading, limited vivid palette. Characters and monsters in chibi proportions (big head, small body, about two heads tall). Dark modern-fantasy theme with violet, cyan or amber glowing accents. No text, no letters, no numbers, no watermark, no signature, no UI frame.
 
-Subject: four separate props, one per cell: a street lamp with violet light, a stone bench, a notice board, a potted dark shrub.
+Subject: four separate props, one per cell: an iron street lamp post with a glowing violet lantern, a wooden park bench, a stone water fountain, a wooden market stall with a striped awning.
 
 Output: one sheet, square 1024x1024 canvas, divided into an exact 2 columns x 2 rows grid of equal 512x512 cells, no grid lines. Exactly one prop per cell, centered, top-down 3/4 view, with at least 32 pixels of empty margin on every side of its cell. Fully transparent background (PNG with alpha). No ground shadow, no floor, no backdrop.
 ```

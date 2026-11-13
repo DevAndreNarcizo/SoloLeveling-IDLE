@@ -25,7 +25,7 @@ def spec(a):
     if i.startswith("monstros/"):
         big = a.get("optional")
         return f"{a['subject']}, chibi monster, cute but menacing, full body, single creature, centered, {PIXEL}", 84 if big else 52, 88 if big else 56
-    if f == "icon": return f"{a['subject']}, one single isolated object only, game inventory icon, centered, no people, no character, no hands, {PIXEL}", 36, 40
+    if f == "icon": return f"{a['subject']}, one single isolated object only, item icon, 16-bit pixel art, bold dark outline, vivid saturated colors, centered, no people, no person, no character, no hands, no body, plain solid white background, no text", 36, 40
     if i == "objetos/fenda": return f"{a['subject']}, one single isolated object, centered, {PIXEL.replace('white', 'black')}", 76, 80
     if i.startswith("objetos/"): return f"{a['subject']}, one single isolated object, centered, {PIXEL}", 28, 32
     return None
