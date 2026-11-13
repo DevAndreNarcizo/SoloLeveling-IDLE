@@ -92,13 +92,13 @@ add('Efeitos', 'image', 'efeitos', [
   ['flecha', 'Flecha', 'a single arrow with an amber glowing tip, pointing to the right, horizontal'],
 ])
 add('Ícones de itens', 'icon', 'icones/itens', [
-  ['arma-lamina', 'Espada (Lâmina)', 'a broad one-handed sword with a dark hilt'],
-  ['arma-vulto', 'Adagas (Vulto)', 'two crossed short daggers'],
+  ['arma-lamina', 'Espada (Lâmina)', 'a steel longsword weapon, straight blade pointing up, golden crossguard, weapon only'],
+  ['arma-vulto', 'Adagas (Vulto)', 'two crossed steel daggers, weapons only'],
   ['arma-arcanista', 'Cajado (Arcanista)', 'a short metal staff with a violet crystal tip'],
-  ['arma-atirador', 'Arco (Atirador)', 'a compact recurve bow with one arrow'],
+  ['arma-atirador', 'Arco (Atirador)', 'a wooden recurve bow weapon with one arrow, weapon only'],
   ['elmo', 'Elmo', 'a dark steel combat helmet with a visor'],
   ['armadura', 'Armadura', 'a dark armored chest piece'],
-  ['luvas', 'Luvas', 'a pair of armored gauntlets'],
+  ['luvas', 'Luvas', 'a pair of brown leather gloves, clothing item only'],
   ['botas', 'Botas', 'a pair of reinforced combat boots'],
   ['anel', 'Anel', 'a silver ring with a small glowing gem'],
   ['pocao', 'Poção de Vida', 'a round glass flask with red liquid and a cork'],

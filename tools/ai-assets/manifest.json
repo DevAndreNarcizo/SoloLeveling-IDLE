@@ -315,13 +315,13 @@
   "id": "icones/itens/arma-lamina",
   "path": "icones/itens/arma-lamina.png",
   "format": "icon",
-  "subject": "a broad one-handed sword with a dark hilt"
+  "subject": "a steel longsword weapon, straight blade pointing up, golden crossguard, weapon only"
  },
  {
   "id": "icones/itens/arma-vulto",
   "path": "icones/itens/arma-vulto.png",
   "format": "icon",
-  "subject": "two crossed short daggers"
+  "subject": "two crossed steel daggers, weapons only"
  },
  {
   "id": "icones/itens/arma-arcanista",
@@ -333,7 +333,7 @@
   "id": "icones/itens/arma-atirador",
   "path": "icones/itens/arma-atirador.png",
   "format": "icon",
-  "subject": "a compact recurve bow with one arrow"
+  "subject": "a wooden recurve bow weapon with one arrow, weapon only"
  },
  {
   "id": "icones/itens/elmo",
@@ -351,7 +351,7 @@
   "id": "icones/itens/luvas",
   "path": "icones/itens/luvas.png",
   "format": "icon",
-  "subject": "a pair of armored gauntlets"
+  "subject": "a pair of brown leather gloves, clothing item only"
  },
  {
   "id": "icones/itens/botas",

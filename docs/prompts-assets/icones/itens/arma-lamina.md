@@ -10,7 +10,7 @@
 ```text
 16-bit JRPG pixel art, crisp hard-edged pixels, bold dark outline, flat cel shading, limited vivid palette. Characters and monsters in chibi proportions (big head, small body, about two heads tall). Dark modern-fantasy theme with violet, cyan or amber glowing accents. No text, no letters, no numbers, no watermark, no signature, no UI frame.
 
-Subject: a broad one-handed sword with a dark hilt.
+Subject: a steel longsword weapon, straight blade pointing up, golden crossguard, weapon only.
 
 Output: a single icon centered on a square 1024x1024 canvas, front view, bold simple silhouette that stays readable when scaled down to 48x48 pixels, occupying about 80% of the canvas. Fully transparent background (PNG with alpha). No ground shadow, no floor, no backdrop.
 ```
