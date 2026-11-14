@@ -10,8 +10,8 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, "client/public/assets/mapas")
-HUNT = (800, 550)   # mundo 1600x1100
-CITY = (700, 500)   # mundo 1400x1000
+HUNT = (960, 640)   # mundo 1920x1280 (exibido 2x)
+CITY = (960, 640)   # mundo 1920x1280 (exibido 2x)
 # NPCs da cidade em coordenadas do mundo (shared/content.ts): caminhos levam até eles
 NPCS = [(700, 260), (380, 520), (1020, 520), (700, 760)]
 

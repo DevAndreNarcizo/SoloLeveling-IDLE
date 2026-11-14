@@ -13,13 +13,13 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-WORLD = {"cidade": (1400, 1000)}  # demais mapas: 1600x1100 (shared/content.ts: HUNT_MAP e CITY_MAP)
+WORLD = (1920, 1280)  # shared/content.ts: HUNT_MAP e CITY_MAP
 NAMES = ["cidade", "minas-ocas", "bosque-cinzento", "cidadela-afundada", "forja-extinta", "arena"]
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("image"); ap.add_argument("map", choices=NAMES)
     args = ap.parse_args()
-    w, h = WORLD.get(args.map, (1600, 1100))
+    w, h = WORLD
     im = Image.open(args.image).convert("RGB")
     W, H = im.size
     if W / H > w / h: cw, ch = round(H * w / h), H      # mais largo que o mundo: corta as laterais
@@ -29,11 +29,13 @@ def main():
     path = os.path.join(ROOT, "client/public/assets/mapas", args.map + ".png")
     # Paleta de 256 cores: metade do tamanho do arquivo, sem diferença visível em pixel art.
     out.quantize(colors=256, method=Image.MEDIANCUT, dither=Image.NONE).save(path, optimize=True)
-    os.makedirs(os.path.join(HERE, "originais"), exist_ok=True)
+    orig_dir = os.path.join(HERE, "originais"); os.makedirs(orig_dir, exist_ok=True)
     ext = os.path.splitext(args.image)[1].lower() or ".png"
-    for old in os.listdir(os.path.join(HERE, "originais")):
-        if old.startswith(f"mapas-{args.map}."): os.remove(os.path.join(HERE, "originais", old))
-    shutil.copyfile(args.image, os.path.join(HERE, "originais", f"mapas-{args.map}{ext}"))
+    dest = os.path.join(orig_dir, f"mapas-{args.map}{ext}")
+    if os.path.abspath(args.image) != os.path.abspath(dest):   # reimportar a partir do próprio original não pode apagá-lo
+        for old in os.listdir(orig_dir):
+            if old.startswith(f"mapas-{args.map}."): os.remove(os.path.join(orig_dir, old))
+        shutil.copyfile(args.image, dest)
     print(f"ok mapas/{args.map}: {w}x{h} (cortado de {cw}x{ch}), {os.path.getsize(path) // 1024} KB")
 
 if __name__ == "__main__": main()

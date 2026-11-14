@@ -17,7 +17,7 @@ const NAME_RE = /^[\p{L}\p{N}_]{3,16}$/u
 const GUILD_NAME_RE = /^[\p{L}\p{N} ]{3,20}$/u
 const TAG_RE = /^[\p{L}\p{N}]{2,4}$/u
 const CITY_SPEED = 190
-const CITY_EDGE_X = 190, CITY_EDGE_TOP = 235, CITY_EDGE_BOTTOM = 190
+const CITY_EDGE_X = 300, CITY_EDGE_TOP = 300, CITY_EDGE_BOTTOM = 245
 const CITY_MAX_PLAYERS_IN_SNAPSHOT = 60
 const INVITE_MS = 60_000
 

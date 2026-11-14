@@ -25,7 +25,7 @@ Para colocar uma folha animada gerada no ChatGPT (melhor qualidade):
 ```
 
 O id registrado em `shared/animated.json` passa a ser animado no jogo. Guarde a imagem original em
-`tools/ai-assets/originais/` para poder reprocessar. Chefes saem maiores automaticamente (86 px).
+`tools/ai-assets/originais/` para poder reprocessar. Chefes saem maiores automaticamente (128 px).
 
 Para colocar um mapa gerado no ChatGPT:
 
@@ -33,8 +33,8 @@ Para colocar um mapa gerado no ChatGPT:
 .venv/bin/python tools/ai-assets/import_map.py ~/Downloads/bosque.png bosque-cinzento
 ```
 
-O mapa precisa ter paredes ou cenário nas bordas e o centro livre: os monstros nascem a pelo menos 190 px
-das laterais e 170 px de cima e de baixo, e ninguém anda nos 130 px das bordas (mundo de 1600×1100).
+O mapa precisa ter paredes ou cenário nas bordas e o centro livre: os monstros nascem a pelo menos 230 px
+das laterais e 200 px de cima e de baixo, e ninguém anda nos 160 px das bordas (mundo de 1920×1280).
 
 Para refazer um sprite: apague o PNG e rode `fetch.py <id>` (ex.: `monstros/lobo-de-nevoa`), ou passe outro
 `--seed` para obter outra variação. As descrições ficam em `shared/assets.ts`. Para mudar um mapa, edite a

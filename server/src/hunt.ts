@@ -37,8 +37,10 @@ interface Corpse { id: number; x: number; y: number; species: string; kind: MobK
 
 const AGGRO_RADIUS = 170
 // Os mapas têm paredes nas bordas: monstros nascem dentro da área livre e ninguém anda por cima das paredes.
-const EDGE_X = 190, EDGE_Y = 170
-const WALL_X = 130, WALL_Y = 120
+const EDGE_X = 230, EDGE_Y = 200
+const WALL_X = 160, WALL_Y = 140
+// Mapa de 1920×1280: mais monstros para manter a densidade da caçada.
+const MOB_COUNT = 12
 // O chefe do teste de promoção é mais fraco que o chefe da fenda: a luta é solo e sem ecos.
 const PROMO_HP = 0.5
 const PROMO_ATK = 0.62
@@ -67,7 +69,7 @@ export class Hunt {
     this.now = opt.now ?? Date.now
     const list: MemberInit[] = Array.isArray(inits) ? inits : [{ c: inits, key: 0 }]
     list.forEach((init, i) => this.addMember(init, i, list.length))
-    if (opt.mode === 'hunt') for (let i = 0; i < 9 + 4 * (list.length - 1); i++) this.spawnMob()
+    if (opt.mode === 'hunt') for (let i = 0; i < MOB_COUNT + 5 * (list.length - 1); i++) this.spawnMob()
     else if (opt.mode === 'promotion') { this.timeLeft = opt.seconds; this.spawnMob('chefe', this.w / 2 + 260, this.h / 2) }
     else this.timeLeft = opt.seconds
   }

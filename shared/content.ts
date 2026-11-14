@@ -141,17 +141,18 @@ export const RIFTS: RiftDef[] = [
 ]
 export const BOSS_EVERY_KILLS = 40
 export const ELITE_CHANCE = 0.06
-export const HUNT_MAP = { w: 1600, h: 1100 }
-export const CITY_MAP = { w: 1400, h: 1000 }
+// Mundos no tamanho exato dos mapas gerados (1920×1280, proporção 3:2): o mapa aparece sem redução.
+export const HUNT_MAP = { w: 1920, h: 1280 }
+export const CITY_MAP = { w: 1920, h: 1280 }
 export const CITY_NAME = 'Vértice'
 
 export interface NpcDef { id: string; name: string; role: string; panel: string; x: number; y: number }
 // Posições casadas com as quatro praças redondas das diagonais do mapa da cidade (mapas/cidade.png).
 export const NPCS: NpcDef[] = [
-  { id: 'guardia-das-fendas', name: 'Ísis, Guardiã das Fendas', role: 'Abre as caçadas', panel: 'fendas', x: 290, y: 310 },
-  { id: 'mercador', name: 'Tobias, o Mercador', role: 'Vende consumíveis', panel: 'loja', x: 290, y: 728 },
-  { id: 'ferreira', name: 'Dária, a Ferreira', role: 'Aprimora equipamentos', panel: 'forja', x: 1110, y: 310 },
-  { id: 'arquivista', name: 'Noé, o Arquivista', role: 'Mostra o ranking', panel: 'ranking', x: 1110, y: 728 },
+  { id: 'guardia-das-fendas', name: 'Ísis, Guardiã das Fendas', role: 'Abre as caçadas', panel: 'fendas', x: 435, y: 400 },
+  { id: 'mercador', name: 'Tobias, o Mercador', role: 'Vende consumíveis', panel: 'loja', x: 435, y: 935 },
+  { id: 'ferreira', name: 'Dária, a Ferreira', role: 'Aprimora equipamentos', panel: 'forja', x: 1485, y: 400 },
+  { id: 'arquivista', name: 'Noé, o Arquivista', role: 'Mostra o ranking', panel: 'ranking', x: 1485, y: 935 },
 ]
 
 // ---------- Progressão ----------

@@ -8,7 +8,7 @@ A imagem deve ter 4 colunas x 4 linhas (linhas: baixo, esquerda, direita, cima; 
 com fundo transparente ou magenta liso (#FF00FF). O script:
   1. remove o fundo (transparência ou chave de cor magenta);
   2. corta cada quadro e alinha os pés na base e o tronco no centro, para o personagem não "tremer" ao andar;
-  3. reduz para o tamanho dos sprites do jogo (54 px de altura; chefes, 86 px) pela mediana de cada bloco;
+  3. reduz para o tamanho dos sprites do jogo (80 px de altura; chefes, 128 px) pela mediana de cada bloco;
   4. salva em client/public/assets/<id>.png e registra o id em shared/animated.json.
 Requer: pillow e numpy.
 """
@@ -84,9 +84,9 @@ def main():
         frames[dst] = (cell, top, bottom, left, right, anchor)
         print(f"  quadro {dst + 1} substituído pelo {src + 1}{' espelhado' if mirror else ''}")
     tall = max(f[2] - f[1] + 1 for f in frames)
-    # Altura padrão igual à dos demais sprites do jogo: 54 px (chefes, 86 px). O jogo amplia 2x.
+    # Altura padrão: 80 px (chefes, 128 px), exibida em tamanho real.
     manifest = {m["id"]: m for m in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "manifest.json")))}
-    target = args.height or (86 if manifest.get(args.id, {}).get("optional") else 54)
+    target = args.height or (128 if manifest.get(args.id, {}).get("optional") else 80)
     bs = tall / target
     k = target / tall
     # canvas comum a todos os quadros, com os pés na mesma linha e o tronco no mesmo eixo

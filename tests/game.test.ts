@@ -113,7 +113,7 @@ describe('talentos, habilidades, grupo e arena', () => {
   it('em grupo, todos recebem EXP e ouro e a queda de um não encerra a caçada', () => {
     const a = newCharacter('A', 'lamina'), b2 = newCharacter('B', 'arcanista'), band = RIFTS[0].bands[0]
     const h = new Hunt([{ c: a, key: 1 }, { c: b2, key: 2 }], { mode: 'hunt', monster: band.monster, boss: band.boss, minLevel: band.min, maxLevel: band.max, rng: seeded(9) })
-    expect(h.mobs.length).toBe(13)
+    expect(h.mobs.length).toBe(17)
     for (let i = 0; i < 900 && !h.ended; i++) h.tick(0.1)
     expect(h.kills).toBeGreaterThan(5)
     expect(a.kills).toBe(h.kills); expect(b2.kills).toBe(h.kills)

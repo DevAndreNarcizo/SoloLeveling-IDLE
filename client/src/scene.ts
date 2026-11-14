@@ -8,7 +8,10 @@ import { onMessage, send } from './net.ts'
 
 // Formatos que a cena não carrega: ícones e fundo são da interface; 'props' só alimenta o montador de mapas.
 const UI_ONLY = new Set(['icon', 'wide', 'props'])
-const SCALE = 2 // ampliação dos sprites em pixel art
+// Folhas animadas já vêm no tamanho final (80 px de altura) e aparecem em tamanho real.
+// Imagens únicas antigas (52 px) são ampliadas para ficar na mesma altura.
+const LEGACY = 1.5
+const scaleFor = (key: string) => (ANIMATED.has(key) ? 1 : LEGACY)
 const CELL = 64 // tamanho da célula dos marcadores gerados por código
 const hash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0 }
 const hsl = (h: number, s: number, l: number) => `hsl(${h % 360} ${s}% ${l}%)`
@@ -152,9 +155,10 @@ export class GameScene extends Phaser.Scene {
     if (room.kind === 'city') {
       for (const n of NPCS) {
         const key = `npcs/${n.id}`
-        this.decor.push(this.add.image(n.x, n.y, key).setScale(SCALE).setOrigin(0.5, 1).setDepth(n.y))
-        this.decor.push(this.add.text(n.x, n.y - 122, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
-        if (n.panel === 'fendas') this.decor.push(this.add.image(n.x + 96, n.y - 6, 'objetos/fenda').setScale(SCALE).setOrigin(0.5, 1).setDepth(n.y - 1))
+        const img = this.add.image(n.x, n.y, key).setScale(scaleFor(key)).setOrigin(0.5, 1).setDepth(n.y)
+        this.decor.push(img)
+        this.decor.push(this.add.text(n.x, n.y - img.displayHeight - 10, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
+        if (n.panel === 'fendas') this.decor.push(this.add.image(n.x + 80, n.y - 6, 'objetos/fenda').setScale(LEGACY).setOrigin(0.5, 1).setDepth(n.y - 1))
       }
     }
   }
@@ -172,7 +176,7 @@ export class GameScene extends Phaser.Scene {
       if (!v) {
         const key = this.textureFor(e)
         // Escala inteira: cada pixel do sprite vira um bloco nítido. Elites são um pouco maiores.
-        const sprite = this.add.image(0, 0, key).setScale(e.mk === 'elite' ? SCALE + 0.5 : SCALE).setOrigin(0.5, 1)
+        const sprite = this.add.image(0, 0, key).setScale(scaleFor(key) * (e.mk === 'elite' ? 1.25 : 1)).setOrigin(0.5, 1)
         const size = sprite.displayHeight
         const box = this.add.container(e.x, e.y, [sprite])
         if (e.k === 'e') sprite.setTint(0x8a6cff).setAlpha(0.88)
@@ -225,7 +229,7 @@ export class GameScene extends Phaser.Scene {
           const key = f.proj === 'arrow' ? 'efeitos/flecha' : 'efeitos/projetil-arcano'
           const p = this.add.image(a.box.x, a.box.y - 40, key).setDisplaySize(36, 36).setDepth(8998).setRotation(Math.atan2(by - (a.box.y - 40), bx - a.box.x))
           this.tweens.add({ targets: p, x: bx, y: by, duration: 110, onComplete: () => p.destroy() })
-        } else this.burst('efeitos/golpe', bx, by, 90)
+        } else this.burst('efeitos/golpe', bx, by, 64)
       }
       const mine = b.ent.me
       this.floatText(bx, by - 14, `${f.crit ? '✦' : ''}${f.dmg}`, mine ? '#ff6b7a' : f.skill ? '#7df2ff' : f.crit ? '#ffcf5c' : '#ffffff', f.skill ? 19 : f.crit ? 18 : 13)
