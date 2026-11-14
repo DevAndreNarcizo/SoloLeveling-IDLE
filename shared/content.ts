@@ -133,7 +133,7 @@ export const RIFTS: RiftDef[] = [
     { min: 36, max: 40, monster: 'sacerdote-do-lodo', boss: 'hierofante-do-lodo' },
     { min: 41, max: 45, monster: 'armadura-vazia', boss: 'guardiao-do-selo' },
   ] },
-  { id: 'forja-extinta', name: 'Forja Extinta', desc: 'Fundição colossal cujas brasas voltaram a andar.', minLevel: 46, bands: [
+  { id: 'forja-extinta', name: 'Forja Extinta', desc: 'Fundição colossal cujas brasas voltaram a andar.', minLevel: 46, wall: [330, 280, 250], bands: [
     { min: 46, max: 50, monster: 'brasa-errante', boss: 'coracao-de-fornalha' },
     { min: 51, max: 55, monster: 'golem-de-escoria', boss: 'colosso-de-escoria' },
     { min: 56, max: 60, monster: 'serpe-de-cinza', boss: 'serpe-matriarca' },
