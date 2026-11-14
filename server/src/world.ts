@@ -17,6 +17,8 @@ const NAME_RE = /^[\p{L}\p{N}_]{3,16}$/u
 const GUILD_NAME_RE = /^[\p{L}\p{N} ]{3,20}$/u
 const TAG_RE = /^[\p{L}\p{N}]{2,4}$/u
 const CITY_SPEED = 190
+// Piso de areia do mapa da arena (duelos e testes de promoção): [lados, topo, base].
+const ARENA_WALL: [number, number, number] = [370, 320, 310]
 const CITY_EDGE_X = 300, CITY_EDGE_TOP = 300, CITY_EDGE_BOTTOM = 245
 const CITY_MAX_PLAYERS_IN_SNAPSHOT = 60
 const INVITE_MS = 60_000
@@ -385,12 +387,12 @@ export class World {
     if (!p) return this.err(s, 'Você já está no rank mais alto disponível.')
     if (c.level < rankOf(c).levelCap) return this.err(s, `O teste libera no nível ${rankOf(c).levelCap}.`)
     if (s.hunt || s.trade) return this.err(s, 'Volte à cidade para iniciar o teste.')
-    s.hunt = new Hunt([this.memberInit(s)], { mode: 'promotion', monster: p.boss, boss: p.boss, minLevel: p.level, maxLevel: p.level, seconds: p.seconds, rng: this.rng, now: this.now })
+    s.hunt = new Hunt([this.memberInit(s)], { mode: 'promotion', monster: p.boss, boss: p.boss, minLevel: p.level, maxLevel: p.level, seconds: p.seconds, wall: ARENA_WALL, rng: this.rng, now: this.now })
     const room: RoomInfo = { kind: 'promotion', w: HUNT_MAP.w, h: HUNT_MAP.h, map: 'arena', title: `Teste de promoção · ${MONSTERS[p.boss].name}`, seconds: p.seconds }
     s.send({ t: 'room', room, you: s.hunt.memberId(s.accountId) })
   }
   private startDuel(a: Session, b: Session) {
-    const hunt = new Hunt([this.memberInit(a), this.memberInit(b)], { mode: 'duel', monster: '', boss: '', minLevel: 1, maxLevel: 1, seconds: ARENA.seconds, rng: this.rng, now: this.now })
+    const hunt = new Hunt([this.memberInit(a), this.memberInit(b)], { mode: 'duel', monster: '', boss: '', minLevel: 1, maxLevel: 1, seconds: ARENA.seconds, wall: ARENA_WALL, rng: this.rng, now: this.now })
     const room: RoomInfo = { kind: 'duel', w: HUNT_MAP.w, h: HUNT_MAP.h, map: 'arena', title: `Arena · ${a.char!.name} × ${b.char!.name}`, seconds: ARENA.seconds }
     for (const o of [a, b]) { o.hunt = hunt; o.send({ t: 'room', room, you: hunt.memberId(o.accountId) }) }
   }
