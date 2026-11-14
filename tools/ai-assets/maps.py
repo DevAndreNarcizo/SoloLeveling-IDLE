@@ -218,5 +218,12 @@ def cidade():
     place_props(img, "cidade", rng, border_free(w, h, inside, 28, 90) & ~road, 14, 150)
     save("cidade", img)
 
+def imported(name):
+    """Mapa importado de uma imagem (import_map.py) não é redesenhado."""
+    d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "originais")
+    return os.path.isdir(d) and any(f.startswith(f"mapas-{name}.") for f in os.listdir(d))
+
 if __name__ == "__main__":
-    for fn in (cidade, minas, bosque, cidadela, forja, arena): fn()
+    for name, fn in (("cidade", cidade), ("minas-ocas", minas), ("bosque-cinzento", bosque), ("cidadela-afundada", cidadela), ("forja-extinta", forja), ("arena", arena)):
+        if imported(name): print(f"mantido mapas/{name} (importado)")
+        else: fn()
