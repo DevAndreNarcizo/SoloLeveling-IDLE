@@ -1,6 +1,6 @@
 // Cena 2D vista de cima. Só desenha o que o servidor manda; não decide nada do jogo.
 import Phaser from 'phaser'
-import { ASSETS, FORMAT_GRID } from '../../shared/assets.ts'
+import { ANIMATED, ASSETS, FORMAT_GRID } from '../../shared/assets.ts'
 import { NPCS } from '../../shared/content.ts'
 import type { Ent, Fx, RoomInfo } from '../../shared/protocol.ts'
 import { assetUrl, hasAsset, monsterKey } from './assets.ts'
@@ -44,8 +44,10 @@ export class GameScene extends Phaser.Scene {
   create() {
     for (const a of ASSETS) {
       if (UI_ONLY.has(a.format)) continue
-      if (!this.textures.exists(a.id)) { if (a.optional) continue; this.placeholder(a.id, a.format) }
-      const g = FORMAT_GRID[a.format]
+      const missing = !this.textures.exists(a.id)
+      if (missing) { if (a.optional) continue; this.placeholder(a.id, a.format) }
+      // Personagem com arte própria só é fatiado se a folha 4×4 já foi importada; senão é imagem única.
+      const g = a.format === 'sheet' && !missing && !ANIMATED.has(a.id) ? FORMAT_GRID.image : FORMAT_GRID[a.format]
       if (g.cols * g.rows > 1) {
         const tex = this.textures.get(a.id), src = tex.getSourceImage() as HTMLImageElement
         const fw = src.width / g.cols, fh = src.height / g.rows
@@ -207,6 +209,9 @@ export class GameScene extends Phaser.Scene {
       if (a) {
         const dx = Math.sign(b.box.x - a.box.x)
         this.tweens.add({ targets: a.sprite, x: dx * 10, duration: 70, yoyo: true })
+        // Parado, o atacante vira para o alvo (a linha da folha é a direção).
+        const ddx = b.box.x - a.box.x, ddy = b.box.y - a.box.y
+        a.row = Math.abs(ddx) > Math.abs(ddy) ? (ddx < 0 ? 1 : 2) : ddy < 0 ? 3 : 0
         if (f.proj) {
           const key = f.proj === 'arrow' ? 'efeitos/flecha' : 'efeitos/projetil-arcano'
           const p = this.add.image(a.box.x, a.box.y - 40, key).setDisplaySize(36, 36).setDepth(8998).setRotation(Math.atan2(by - (a.box.y - 40), bx - a.box.x))

@@ -2,22 +2,23 @@
 
 - **Categoria:** Monstros comuns
 - **Salvar em:** `client/public/assets/monstros/catador-oco.png`
-- **Formato:** Imagem única de corpo inteiro, fundo transparente
+- **Formato:** Folha de sprites 4×4 (andar em 4 direções), fundo magenta. Depois rode tools/ai-assets/import_sheet.py
 - **Tamanho a pedir:** 1024x1024
 
 ## Prompt (copie e cole no ChatGPT)
 
 ```text
-16-bit JRPG pixel art, crisp hard-edged pixels, bold dark outline, flat cel shading, limited vivid palette. Characters and monsters in chibi proportions (big head, small body, about two heads tall). Dark modern-fantasy theme with violet, cyan or amber glowing accents. No text, no letters, no numbers, no watermark, no signature, no UI frame.
+Professional 16-bit pixel art for a top-down 2D RPG, in the style of classic JRPG overworld art. Characters and monsters about three heads tall (not super chibi). Detailed shading, muted dark fantasy palette with violet, cyan or amber glowing accents. Crisp hard-edged pixels, 1-pixel dark outline, no anti-aliasing. No text, no letters, no numbers, no watermark, no UI frame.
 
 Subject: a hunched hollow-eyed humanoid scavenger made of dark rags and mining scrap, carrying a rusty pickaxe, an empty glowing-blue chest cavity.
 
-Output: a single full-body subject centered on a square 1024x1024 canvas, standing, front three-quarter view, feet near the bottom edge, occupying about 85% of the canvas height. Fully transparent background (PNG with alpha). No ground shadow, no floor, no backdrop.
+Professional 16-bit pixel art sprite sheet for a top-down 2D RPG, in the style of classic JRPG overworld sprites. Proportions about three heads tall (not super chibi), detailed shading, muted dark fantasy palette, crisp hard-edged pixels, 1-pixel dark outline, no anti-aliasing. Layout: exact grid of 4 columns x 4 rows of equal square cells on a square canvas. Row 1: walking toward the camera. Row 2: walking left. Row 3: walking right. Row 4: walking away from the camera. Each row has 4 walk-cycle frames. Same character, same size and same colors in every cell, centered, feet near the bottom of the cell, with empty margin around. Background: plain solid magenta (#FF00FF), no grid lines, no text, no shadows.
 ```
 
 ## Antes de salvar, confira
 
-- [ ] Um único personagem ou objeto, de corpo inteiro, sem cortes.
-- [ ] O fundo é transparente.
-- [ ] Legível em tamanho pequeno (cerca de 96 px de altura).
+- [ ] A imagem é quadrada e tem exatamente 4 colunas × 4 linhas, sem linhas de grade desenhadas.
+- [ ] Linhas na ordem: baixo, esquerda, direita, cima.
+- [ ] O personagem tem o mesmo tamanho em todas as células e não encosta nas bordas da célula.
+- [ ] O fundo é magenta liso (#FF00FF) ou transparente de verdade.
 - [ ] O estilo bate com os assets já aprovados (mesma paleta e mesmo contorno).

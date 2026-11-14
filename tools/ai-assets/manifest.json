@@ -2,25 +2,25 @@
  {
   "id": "cacadores/lamina",
   "path": "cacadores/lamina.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a sturdy hunter in a dark charcoal combat coat with steel shoulder guard, carrying a broad one-handed sword, short dark hair, violet glowing trim on the coat"
  },
  {
   "id": "cacadores/vulto",
   "path": "cacadores/vulto.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a lean agile hunter in a black hooded jacket and face scarf, holding two short daggers in reverse grip, teal glowing trim"
  },
  {
   "id": "cacadores/arcanista",
   "path": "cacadores/arcanista.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a slim hunter in a long dark indigo coat with a high collar, holding a short metal staff tipped with a floating violet crystal, silver hair"
  },
  {
   "id": "cacadores/atirador",
   "path": "cacadores/atirador.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a hunter in a dark green tactical cloak with a quiver on the back, holding a compact recurve bow, amber glowing trim"
  },
  {
@@ -50,156 +50,156 @@
  {
   "id": "monstros/larva-de-ferrugem",
   "path": "monstros/larva-de-ferrugem.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a fat segmented grub the size of a dog with rust-orange metal plates on its back and small mandibles"
  },
  {
   "id": "monstros/morcego-de-cinza",
   "path": "monstros/morcego-de-cinza.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a large grey bat with tattered wings that shed ash particles, glowing ember-orange eyes"
  },
  {
   "id": "monstros/catador-oco",
   "path": "monstros/catador-oco.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a hunched hollow-eyed humanoid scavenger made of dark rags and mining scrap, carrying a rusty pickaxe, an empty glowing-blue chest cavity"
  },
  {
   "id": "monstros/lobo-de-nevoa",
   "path": "monstros/lobo-de-nevoa.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a grey wolf whose legs and tail dissolve into pale mist, pale blue eyes"
  },
  {
   "id": "monstros/espinheiro-vivo",
   "path": "monstros/espinheiro-vivo.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a walking bramble bush creature with thorny vine arms and a single pale-green glowing bud for a head"
  },
  {
   "id": "monstros/cervo-espectral",
   "path": "monstros/cervo-espectral.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a translucent ghostly stag with bone-white antlers and a faint cyan glow inside its chest"
  },
  {
   "id": "monstros/sentinela-afogada",
   "path": "monstros/sentinela-afogada.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a waterlogged armored soldier covered in barnacles and seaweed, holding a corroded spear, dripping water"
  },
  {
   "id": "monstros/sacerdote-do-lodo",
   "path": "monstros/sacerdote-do-lodo.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a robed cultist whose robe melts into dark green mud, holding a lantern with a sickly green flame"
  },
  {
   "id": "monstros/armadura-vazia",
   "path": "monstros/armadura-vazia.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "an empty animated suit of dark plate armor with violet light leaking from the joints, holding a greatsword"
  },
  {
   "id": "monstros/brasa-errante",
   "path": "monstros/brasa-errante.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a floating cluster of glowing coals bound by black iron rings, small flames trailing behind"
  },
  {
   "id": "monstros/golem-de-escoria",
   "path": "monstros/golem-de-escoria.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a bulky golem made of cooled black slag with cracks of molten orange, heavy fists"
  },
  {
   "id": "monstros/serpe-de-cinza",
   "path": "monstros/serpe-de-cinza.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a small wingless ash-grey wyvern-like lizard walking on four legs with smoking nostrils and charcoal scales"
  },
  {
   "id": "monstros/larva-mae",
   "path": "monstros/larva-mae.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a huge bloated grub queen with thick rust-orange armor plates, many small legs and a crown of jagged metal spikes",
   "optional": true
  },
  {
   "id": "monstros/asa-ancia",
   "path": "monstros/asa-ancia.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a giant ancient bat with scarred torn wings, a mane of white fur and burning orange eyes, ash falling from its wings",
   "optional": true
  },
  {
   "id": "monstros/capataz-oco",
   "path": "monstros/capataz-oco.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a tall hollow humanoid foreman in a tattered long coat and a cracked mining helmet with a lamp, wielding a heavy chain, glowing blue chest cavity",
   "optional": true
  },
  {
   "id": "monstros/alfa-da-nevoa",
   "path": "monstros/alfa-da-nevoa.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a massive white-grey alpha wolf with a mist mane and three glowing pale-blue eyes",
   "optional": true
  },
  {
   "id": "monstros/raiz-ancia",
   "path": "monstros/raiz-ancia.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a towering old tree-root creature with thorn whips, moss beard and several pale-green glowing buds",
   "optional": true
  },
  {
   "id": "monstros/rei-galhado",
   "path": "monstros/rei-galhado.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a regal ghostly stag king with enormous branching antlers wrapped in cyan spirit flames",
   "optional": true
  },
  {
   "id": "monstros/capitao-das-mares",
   "path": "monstros/capitao-das-mares.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a drowned captain in a barnacle-covered coat and tricorn-like helmet, wielding a rusted anchor as a weapon",
   "optional": true
  },
  {
   "id": "monstros/hierofante-do-lodo",
   "path": "monstros/hierofante-do-lodo.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a tall high priest with a tall mud-dripping mitre, carrying a censer that spills green fog, robe melting into sludge",
   "optional": true
  },
  {
   "id": "monstros/guardiao-do-selo",
   "path": "monstros/guardiao-do-selo.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a colossal empty armor with a tower shield engraved with a glowing violet seal and a halberd",
   "optional": true
  },
  {
   "id": "monstros/coracao-de-fornalha",
   "path": "monstros/coracao-de-fornalha.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a huge floating furnace core of white-hot coals inside a cracked iron cage, flames bursting from the gaps",
   "optional": true
  },
  {
   "id": "monstros/colosso-de-escoria",
   "path": "monstros/colosso-de-escoria.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a giant slag colossus with molten orange veins, one arm shaped like a hammer",
   "optional": true
  },
  {
   "id": "monstros/serpe-matriarca",
   "path": "monstros/serpe-matriarca.png",
-  "format": "image",
+  "format": "sheet",
   "subject": "a large ash-grey wyvern matriarch with small folded wings, horned crest and glowing ember throat",
   "optional": true
  },

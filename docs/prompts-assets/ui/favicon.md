@@ -8,7 +8,7 @@
 ## Prompt (copie e cole no ChatGPT)
 
 ```text
-16-bit JRPG pixel art, crisp hard-edged pixels, bold dark outline, flat cel shading, limited vivid palette. Characters and monsters in chibi proportions (big head, small body, about two heads tall). Dark modern-fantasy theme with violet, cyan or amber glowing accents. No text, no letters, no numbers, no watermark, no signature, no UI frame.
+Professional 16-bit pixel art for a top-down 2D RPG, in the style of classic JRPG overworld art. Characters and monsters about three heads tall (not super chibi). Detailed shading, muted dark fantasy palette with violet, cyan or amber glowing accents. Crisp hard-edged pixels, 1-pixel dark outline, no anti-aliasing. No text, no letters, no numbers, no watermark, no UI frame.
 
 Subject: a minimal violet portal tear symbol, very simple, readable at 32 pixels.
 
