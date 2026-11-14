@@ -2,6 +2,7 @@
 
 Uso:  python tools/ai-assets/import_sheet.py <imagem.png> <id do asset> [--height N]
       ex.: python tools/ai-assets/import_sheet.py ~/Downloads/lamina.png cacadores/lamina
+      quadro defeituoso: --replace 15=13m  (o 15º passa a ser o 13º espelhado)
 
 A imagem deve ter 4 colunas x 4 linhas (linhas: baixo, esquerda, direita, cima; 4 quadros de caminhada cada),
 com fundo transparente ou magenta liso (#FF00FF). O script:
@@ -55,6 +56,8 @@ def shrink(arr, w, h):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("image"); ap.add_argument("id")
     ap.add_argument("--height", type=int, default=0, help="altura do personagem em pixels (padrão: 54; chefes, 86)")
+    ap.add_argument("--replace", action="append", default=[], metavar="DESTINO=ORIGEM[m]",
+                    help="troca um quadro defeituoso por outro (1 a 16, lendo linha a linha); m = espelhado. Ex.: --replace 15=13m")
     args = ap.parse_args()
     a = remove_background(Image.open(args.image))
     H, W = a.shape[:2]; cw, ch = W / 4, H / 4
@@ -69,6 +72,15 @@ def main():
         upper = ys < top + (bottom - top) * 0.5
         anchor = int(np.median(xs[upper]))
         frames.append((cell, top, bottom, left, right, anchor))
+    for rule in args.replace:
+        dst, src = rule.split("=")
+        mirror = src.endswith("m"); src = int(src.rstrip("m")) - 1; dst = int(dst) - 1
+        cell, top, bottom, left, right, anchor = frames[src]
+        if mirror:
+            w = cell.shape[1]; cell = cell[:, ::-1].copy()
+            left, right, anchor = w - 1 - right, w - 1 - left, w - 1 - anchor
+        frames[dst] = (cell, top, bottom, left, right, anchor)
+        print(f"  quadro {dst + 1} substituído pelo {src + 1}{' espelhado' if mirror else ''}")
     tall = max(f[2] - f[1] + 1 for f in frames)
     # Altura padrão igual à dos demais sprites do jogo: 54 px (chefes, 86 px). O jogo amplia 2x.
     manifest = {m["id"]: m for m in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "manifest.json")))}
