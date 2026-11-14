@@ -1,6 +1,6 @@
 """Importa uma imagem única de personagem parado (NPC) gerada por IA, com fundo magenta ou transparente.
 
-Uso:  python tools/ai-assets/import_image.py <imagem> <id do asset> [--height N] [--mist] [--fire]
+Uso:  python tools/ai-assets/import_image.py <imagem> <id do asset> [--height N] [--cell N] [--mist] [--fire]
       ex.: python tools/ai-assets/import_image.py ~/Downloads/isis.png npcs/guardia-das-fendas
 
 Remove o fundo, recorta o personagem, reduz para a altura do jogo (padrão: 88 px) e salva em
@@ -13,9 +13,14 @@ from import_sheet import ROOT, ANIMATED, remove_background, drop_specks, shrink
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("image"); ap.add_argument("id")
     ap.add_argument("--height", type=int, default=88); ap.add_argument("--mist", action="store_true"); ap.add_argument("--fire", action="store_true")
+    ap.add_argument("--cell", type=int, default=0, help="a imagem é uma folha 4x4: usa só este quadro (1 a 16)")
     args = ap.parse_args()
     from PIL import Image
-    a = drop_specks(remove_background(Image.open(args.image), args.mist, args.fire))
+    a = remove_background(Image.open(args.image), args.mist, args.fire)
+    if args.cell:
+        H, W = a.shape[:2]; i = args.cell - 1
+        a = a[(i // 4) * H // 4:(i // 4 + 1) * H // 4, (i % 4) * W // 4:(i % 4 + 1) * W // 4].copy()
+    a = drop_specks(a)
     ys, xs = np.nonzero(a[:, :, 3])
     crop = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
     k = args.height / crop.shape[0]
