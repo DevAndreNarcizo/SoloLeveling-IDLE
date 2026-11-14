@@ -20,7 +20,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ANIMATED = os.path.join(ROOT, "shared/animated.json")
 
-def remove_background(img, mist=False):
+def remove_background(img, mist=False, fire=False):
     """Fundo transparente ou magenta -> alfa. Também limpa o halo magenta nas bordas."""
     a = np.array(img.convert("RGBA")).astype(int)
     if (a[:, :, 3] < 10).mean() > 0.2:      # já veio transparente
@@ -41,6 +41,11 @@ def remove_background(img, mist=False):
     cap = g + (np.abs(r - b) // 2) + 24
     band &= (np.abs(r - b) < 45) & (np.minimum(r, b) > g + 40)   # só tons magenta; violeta (azul bem maior) fica intacto
     out[:, :, 0] = np.where(band, np.minimum(r, cap), r); out[:, :, 2] = np.where(band, np.minimum(b, cap), b)
+    if fire:
+        # Chamas: a borda rosada é laranja misturado com magenta; tirar o azul em excesso devolve o laranja
+        r, g, b = out[:, :, 0], out[:, :, 1], out[:, :, 2].copy()
+        pink = alpha & (r > 150) & (b > g + 10)
+        out[:, :, 2] = np.where(pink, g // 2, b)
     if mist:
         # Névoa e fumaça semitransparentes vêm misturadas com o magenta em toda a área, não só na borda: viram cinza-claro
         r, g, b = out[:, :, 0].copy(), out[:, :, 1], out[:, :, 2].copy()
@@ -82,9 +87,10 @@ def main():
     ap.add_argument("--replace", action="append", default=[], metavar="DESTINO=ORIGEM[m]",
                     help="troca um quadro defeituoso por outro (1 a 16, lendo linha a linha); m = espelhado. Ex.: --replace 15=13m")
     ap.add_argument("--mist", action="store_true", help="limpa o tom rosado de névoa/fumaça semitransparente (não use em personagens com magenta ou rosa)")
+    ap.add_argument("--fire", action="store_true", help="limpa a borda rosada de chamas (não use em personagens com roxo, rosa ou violeta)")
     ap.add_argument("--keep-specks", action="store_true", help="mantém partículas soltas (cinzas, faíscas) em vez de apagá-las")
     args = ap.parse_args()
-    a = remove_background(Image.open(args.image), args.mist)
+    a = remove_background(Image.open(args.image), args.mist, args.fire)
     H, W = a.shape[:2]; cw, ch = W / 4, H / 4
     frames = []
     for i in range(16):
