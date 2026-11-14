@@ -3,6 +3,7 @@
 // Para usar a sua arte, salve o PNG em client/public/assets/<path>.
 
 import animated from './animated.json'
+import attacks from './attacks.json'
 
 export type AssetFormat = 'sheet' | 'image' | 'tile' | 'map' | 'props' | 'fx' | 'icon' | 'wide'
 export interface AssetDef {
@@ -139,3 +140,5 @@ export const ASSETS: AssetDef[] = list
 export const ASSET_BY_ID: Record<string, AssetDef> = Object.fromEntries(list.map((a) => [a.id, a]))
 /** Assets que já têm folha 4×4 importada (tools/ai-assets/import_sheet.py). Os demais de formato 'sheet' ainda são imagem única. */
 export const ANIMATED: ReadonlySet<string> = new Set(animated as string[])
+/** Personagens com folha de ataque importada (import_sheet.py --attack), salva em <id>-ataque.png. */
+export const ATTACKS: ReadonlySet<string> = new Set(attacks as string[])

@@ -3,6 +3,7 @@
 Uso:  python tools/ai-assets/import_sheet.py <imagem.png> <id do asset> [--height N]
       ex.: python tools/ai-assets/import_sheet.py ~/Downloads/lamina.png cacadores/lamina
       quadro defeituoso: --replace 15=13m  (o 15º passa a ser o 13º espelhado)
+      folha de ataque: --attack   (ex.: import_sheet.py lamina-ataque.png cacadores/lamina --attack)
       criatura que voa: --float   |   chamas com borda rosada: --fire
       névoa ou fumaça rosada: --mist   |   manter partículas soltas: --keep-specks
 
@@ -90,6 +91,7 @@ def main():
     ap.add_argument("--mist", action="store_true", help="limpa o tom rosado de névoa/fumaça semitransparente (não use em personagens com magenta ou rosa)")
     ap.add_argument("--fire", action="store_true", help="limpa a borda rosada de chamas (não use em personagens com roxo, rosa ou violeta)")
     ap.add_argument("--float", action="store_true", help="criatura que voa ou flutua: alinha os quadros pelo centro do corpo, não pelos pés")
+    ap.add_argument("--attack", action="store_true", help="folha de ATAQUE (preparar, golpear, acertar, recolher): salva em <id>-ataque.png, na mesma escala da folha de caminhada")
     ap.add_argument("--keep-specks", action="store_true", help="mantém partículas soltas (cinzas, faíscas) em vez de apagá-las")
     args = ap.parse_args()
     a = remove_background(Image.open(args.image), args.mist, args.fire)
@@ -105,6 +107,8 @@ def main():
         # âncora horizontal: centro do tronco (metade de cima), mais estável que a largura total ao andar
         upper = ys < top + (bottom - top) * 0.5
         anchor = int(np.median(xs[upper]))
+        # No ataque a arma e o tronco se movem; os pés ficam no lugar, então o eixo é o centro dos pés.
+        if args.attack: feet = ys > bottom - (bottom - top) * 0.12; anchor = int((xs[feet].min() + xs[feet].max()) / 2)
         if args.float:
             # Voadores: o corpo é a parte mais densa. Centraliza por ela, para as asas baterem sem o corpo pular.
             col = (cell[:, :, 3] > 0).sum(axis=0).astype(float); rowm = (cell[:, :, 3] > 0).sum(axis=1).astype(float)
@@ -125,6 +129,8 @@ def main():
     # Altura padrão: 80 px (chefes, 128 px), exibida em tamanho real.
     manifest = {m["id"]: m for m in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "manifest.json")))}
     target = args.height or (128 if manifest.get(args.id, {}).get("optional") else 80)
+    # Ataque: a arma erguida aumenta a altura do quadro. A escala vem da pose em pé (4º quadro de cada linha).
+    if args.attack: tall = float(np.median([frames[i][2] - frames[i][1] + 1 for i in (3, 7, 11, 15)]))
     bs = tall / target
     k = target / tall
     # canvas comum a todos os quadros, com os pés na mesma linha e o tronco no mesmo eixo
@@ -144,11 +150,12 @@ def main():
         ox = (i % 4) * side + (side - w) // 2
         oy = (i // 4) * side + side - h - 2
         sheet.alpha_composite(small, (ox, oy))
-    out = os.path.join(ROOT, "client/public/assets", args.id + ".png")
+    out = os.path.join(ROOT, "client/public/assets", args.id + ("-ataque" if args.attack else "") + ".png")
     os.makedirs(os.path.dirname(out), exist_ok=True); sheet.save(out)
-    ids = json.load(open(ANIMATED)) if os.path.exists(ANIMATED) else []
+    listing = os.path.join(ROOT, "shared/attacks.json") if args.attack else ANIMATED
+    ids = json.load(open(listing)) if os.path.exists(listing) else []
     if args.id not in ids: ids.append(args.id); ids.sort()
-    json.dump(ids, open(ANIMATED, "w"), indent=1, ensure_ascii=False); open(ANIMATED, "a").write("\n")
+    json.dump(ids, open(listing, "w"), indent=1, ensure_ascii=False); open(listing, "a").write("\n")
     print(f"ok {args.id}: quadro {side}x{side}, personagem com {target}px de altura (redução de {bs:.1f}x)")
 
 if __name__ == "__main__": main()

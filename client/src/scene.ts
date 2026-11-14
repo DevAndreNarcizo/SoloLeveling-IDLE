@@ -1,6 +1,6 @@
 // Cena 2D vista de cima. Só desenha o que o servidor manda; não decide nada do jogo.
 import Phaser from 'phaser'
-import { ANIMATED, ASSETS, FORMAT_GRID } from '../../shared/assets.ts'
+import { ANIMATED, ASSETS, ATTACKS, FORMAT_GRID } from '../../shared/assets.ts'
 import { NPCS } from '../../shared/content.ts'
 import type { Ent, Fx, RoomInfo } from '../../shared/protocol.ts'
 import { assetUrl, hasAsset, monsterKey } from './assets.ts'
@@ -13,6 +13,8 @@ const UI_ONLY = new Set(['icon', 'wide', 'props'])
 // Imagens únicas antigas (52 px) são ampliadas para ficar na mesma altura.
 const LEGACY = 1.5
 const scaleFor = (key: string) => (ANIMATED.has(key) ? 1 : LEGACY)
+// Folha de ataque: o golpe acerta ATK_HIT ms depois de começar; a animação toda dura ATK_TOTAL.
+const ATK_HIT = 110, ATK_TOTAL = 340
 const CELL = 64 // tamanho da célula dos marcadores gerados por código
 const hash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0 }
 // Criaturas que voam ou flutuam: ficam um pouco acima do chão e oscilam no ar.
@@ -32,6 +34,9 @@ interface View {
   flashUntil: number // enquanto o clarão de impacto dura, a cor normal não volta
   bubble?: Phaser.GameObjects.Ellipse // cúpula da Barreira
   dying?: boolean
+  /** Animação de ataque em curso: até quando dura e qual quadro mostrar. */
+  atkKey?: string; atkStart: number
+  h: number // altura do sprite parado (a folha de ataque tem quadros maiores e não deve mexer na barra de vida)
 }
 
 export class GameScene extends Phaser.Scene {
@@ -53,6 +58,7 @@ export class GameScene extends Phaser.Scene {
 
   preload() {
     for (const a of ASSETS) if (hasAsset(a.id) && !UI_ONLY.has(a.format)) this.load.image(a.id, assetUrl(a.id))
+    for (const id of ATTACKS) this.load.image(`${id}-ataque`, `/assets/${id}-ataque.png`)
   }
 
   create() {
@@ -67,6 +73,10 @@ export class GameScene extends Phaser.Scene {
         const fw = src.width / g.cols, fh = src.height / g.rows
         for (let i = 0; i < g.cols * g.rows; i++) tex.add(i, 0, (i % g.cols) * fw, Math.floor(i / g.cols) * fh, fw, fh)
       }
+    }
+    for (const id of ATTACKS) { // fatia as folhas de ataque em 16 quadros
+      const tex = this.textures.get(`${id}-ataque`), src = tex.getSourceImage() as HTMLImageElement, fw = src.width / 4
+      for (let i = 0; i < 16; i++) tex.add(i, 0, (i % 4) * fw, Math.floor(i / 4) * fw, fw, fw)
     }
     this.fx = new Effects(this)
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,LEFT,DOWN,RIGHT,E', false) as Record<string, Phaser.Input.Keyboard.Key>
@@ -216,7 +226,7 @@ export class GameScene extends Phaser.Scene {
           const label = e.k === 'p' && e.r ? `[${e.r}] ${e.g ? `<${e.g}> ` : ''}${e.n}` : e.n
           box.add(this.add.text(0, -size - 12 - fly, label, { fontSize: '11px', color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5))
         }
-        v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX, ox: 0, oy: 0, fly, flashUntil: 0 }
+        v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX, ox: 0, oy: 0, fly, flashUntil: 0, h: size, atkStart: -1e9, atkKey: ATTACKS.has(key) ? `${key}-ataque` : undefined }
         if (e.k !== 'c' && this.room?.kind !== 'city') { v.bar = this.add.graphics(); box.add(v.bar) }
         this.views.set(e.id, v)
         // Quem aparece no meio da caçada surge de um rasgo de sombra; ecos sobem do chão.
@@ -234,11 +244,11 @@ export class GameScene extends Phaser.Scene {
         if (this.time.now >= v.flashUntil) this.baseTint(v)
         v.sprite.setAlpha(e.hp <= 0 ? 0.35 : 1)
         // Barreira: cúpula visível enquanto o escudo durar
-        if (e.sh && !v.bubble) { const h = v.sprite.displayHeight; v.bubble = this.add.ellipse(0, -h / 2, h * 1.25, h * 1.3, COLOR.cyan, 0.14).setStrokeStyle(2, COLOR.cyan, 0.9); v.box.add(v.bubble); this.tweens.add({ targets: v.bubble, alpha: 0.55, duration: 600, yoyo: true, repeat: -1 }) }
+        if (e.sh && !v.bubble) { const h = v.h; v.bubble = this.add.ellipse(0, -h / 2, h * 1.25, h * 1.3, COLOR.cyan, 0.14).setStrokeStyle(2, COLOR.cyan, 0.9); v.box.add(v.bubble); this.tweens.add({ targets: v.bubble, alpha: 0.55, duration: 600, yoyo: true, repeat: -1 }) }
         else if (!e.sh && v.bubble) { v.bubble.destroy(); v.bubble = undefined }
       }
       if (v.bar) {
-        const w = e.mk === 'chefe' ? 90 : 46, y = -v.sprite.displayHeight - 4 - v.fly
+        const w = e.mk === 'chefe' ? 90 : 46, y = -v.h - 4 - v.fly
         v.bar.clear().fillStyle(0x000000, 0.7).fillRect(-w / 2 - 1, y - 1, w + 2, 6)
           .fillStyle(e.k === 'm' ? 0xe5484d : e.k === 'e' ? 0x8b5cf6 : 0x5fd38a).fillRect(-w / 2, y, w * Math.max(0, e.hp / e.mhp), 4)
       }
@@ -255,7 +265,7 @@ export class GameScene extends Phaser.Scene {
   /** Morte: clarão, queda e dissolução em sombra. O corpo some; o resquício (se houver) fica no chão. */
   private dieAnim(v: View) {
     v.dying = true
-    const boss = v.ent.mk === 'chefe', h = v.sprite.displayHeight
+    const boss = v.ent.mk === 'chefe', h = v.h
     v.sprite.setTintFill(0xffffff); v.bar?.destroy()
     this.time.delayedCall(70, () => { if (v.sprite.active) v.sprite.setTintFill(v.ent.k === 'p' ? 0x7a1f2a : 0x2a1f4a) })
     this.fx.death(v.box.x, v.box.y, h, boss)
@@ -273,7 +283,7 @@ export class GameScene extends Phaser.Scene {
   }
   /** Reação de quem apanha: clarão branco, empurrão, faíscas e o número do dano. */
   private hitReact(f: Extract<Fx, { f: 'hit' }>, b: View, ang: number, color: number, lethal: boolean) {
-    const h = b.sprite.displayHeight, bx = b.box.x, by = b.box.y - h * 0.5 - b.fly
+    const h = b.h, bx = b.box.x, by = b.box.y - h * 0.5 - b.fly
     const boss = b.ent.mk === 'chefe', mine = !!b.ent.me, big = !!f.crit || !!f.skill
     if (!lethal && b.sprite.active) {
       b.sprite.setTintFill(0xffffff); b.flashUntil = this.time.now + 60
@@ -291,42 +301,56 @@ export class GameScene extends Phaser.Scene {
     this.floatText(bx, by - h * 0.35, text, mine ? '#ff6b7a' : f.skill ? '#7df2ff' : f.crit ? '#ffcf5c' : '#ffffff', f.skill ? 20 : f.crit ? 19 : 13)
   }
 
+  /** O golpe em si: investida ou disparo, efeito e reação do alvo. */
+  private strike(f: Extract<Fx, { f: 'hit' }>, a: View, b: View, lethal: boolean) {
+    if (!a.box.active || !b.box.active) return
+    const bh = b.h, bx = b.box.x, by = b.box.y - bh * 0.5 - b.fly
+    const ax = a.box.x, ay = a.box.y - a.h * 0.5 - a.fly
+    const ang = Math.atan2(b.box.y - a.box.y, b.box.x - a.box.x), cx = Math.cos(ang), cy = Math.sin(ang)
+    const boss = a.ent.mk === 'chefe', color = strikeColor(a.ent.k, a.ent.s, boss)
+    if (f.proj) {
+      // Disparo: recuo de quem atira, projétil com rastro e impacto só na chegada.
+      this.nudge(a, -cx * 5, -cy * 3, 60)
+      this.fx.glow(ax + cx * 14, ay + cy * 10, f.skill ? 90 : 50, color, 160, 0.8)
+      const key = f.proj === 'arrow' ? 'efeitos/flecha' : 'efeitos/projetil-arcano'
+      this.fx.projectile(key, ax + cx * 14, ay + cy * 10, bx, by, color, f.skill ? 54 : 36, () => {
+        if (f.skill) { this.fx.glow(bx, by, 150, color, 280, 0.9); this.fx.ring(b.box.x, b.box.y, 40, color, 300, 2) }
+        this.hitReact(f, b, ang, color, lethal)
+      })
+    } else {
+      // Corpo a corpo: investida na direção do alvo e corte em meia-lua sobre ele.
+      const reach = boss ? 22 : 14
+      this.nudge(a, cx * reach, cy * reach * 0.7, boss ? 110 : 70)
+      const size = (boss ? 58 : 34) * (f.skill ? 1.5 : f.crit ? 1.2 : 1)
+      this.fx.slash(bx - cx * 8, by - cy * 6, ang, color, size, f.skill ? 1.25 : 1)
+      if (f.skill) { this.fx.slash(bx - cx * 8, by - cy * 6, ang + Math.PI, color, size * 0.8); this.fx.glow(bx, by, 130, color, 240, 0.8) }
+      if (boss) { this.fx.ring(b.box.x, b.box.y, 46, COLOR.red, 300, 2); this.cameras.main.shake(100, 0.004, false) }
+      this.hitReact(f, b, ang, color, lethal)
+    }
+  }
+
   private playFx(f: Fx, dying: Set<number> = new Set()) {
     if (f.f === 'hit') {
       const a = this.views.get(f.from), b = this.views.get(f.to)
       if (!b) return
       const lethal = dying.has(f.to)
-      const bh = b.sprite.displayHeight, bx = b.box.x, by = b.box.y - bh * 0.5 - b.fly
+      const bh = b.h, bx = b.box.x, by = b.box.y - bh * 0.5 - b.fly
       if (!a) { this.hitReact(f, b, 0, COLOR.white, lethal); return }
-      const ax = a.box.x, ay = a.box.y - a.sprite.displayHeight * 0.5 - a.fly
+      const ax = a.box.x, ay = a.box.y - a.h * 0.5 - a.fly
       const ang = Math.atan2(b.box.y - a.box.y, b.box.x - a.box.x), cx = Math.cos(ang), cy = Math.sin(ang)
       const boss = a.ent.mk === 'chefe', color = strikeColor(a.ent.k, a.ent.s, boss)
       // Parado, o atacante vira para o alvo (a linha da folha é a direção).
       a.row = Math.abs(cx) > Math.abs(cy) ? (cx < 0 ? 1 : 2) : cy < 0 ? 3 : 0
-      if (f.proj) {
-        // Disparo: recuo de quem atira, projétil com rastro e impacto só na chegada.
-        this.nudge(a, -cx * 5, -cy * 3, 60)
-        this.fx.glow(ax + cx * 14, ay + cy * 10, f.skill ? 90 : 50, color, 160, 0.8)
-        const key = f.proj === 'arrow' ? 'efeitos/flecha' : 'efeitos/projetil-arcano'
-        this.fx.projectile(key, ax + cx * 14, ay + cy * 10, bx, by, color, f.skill ? 54 : 36, () => {
-          if (f.skill) { this.fx.glow(bx, by, 150, color, 280, 0.9); this.fx.ring(b.box.x, b.box.y, 40, color, 300, 2) }
-          this.hitReact(f, b, ang, color, lethal)
-        })
-      } else {
-        // Corpo a corpo: investida na direção do alvo e corte em meia-lua sobre ele.
-        const reach = boss ? 22 : 14
-        this.nudge(a, cx * reach, cy * reach * 0.7, boss ? 110 : 70)
-        const size = (boss ? 58 : 34) * (f.skill ? 1.5 : f.crit ? 1.2 : 1)
-        this.fx.slash(bx - cx * 8, by - cy * 6, ang, color, size, f.skill ? 1.25 : 1)
-        if (f.skill) { this.fx.slash(bx - cx * 8, by - cy * 6, ang + Math.PI, color, size * 0.8); this.fx.glow(bx, by, 130, color, 240, 0.8) }
-        if (boss) { this.fx.ring(b.box.x, b.box.y, 46, COLOR.red, 300, 2); this.cameras.main.shake(100, 0.004, false) }
-        this.hitReact(f, b, ang, color, lethal)
-      }
+      // Com folha de ataque, o personagem prepara o golpe e o impacto só acontece no quadro certo.
+      const wind = a.atkKey ? ATK_HIT : 0
+      if (a.atkKey) a.atkStart = this.time.now
+      if (wind) { this.time.delayedCall(wind, () => this.strike(f, a, b, lethal)); return }
+      this.strike(f, a, b, lethal)
     } else if (f.f === 'skill') {
       const v = this.views.get(f.id)
       if (v) {
-        this.floatText(v.box.x, v.box.y - v.sprite.displayHeight - 14, f.name, skillStyle(f.name)?.kind === 'buff' ? '#ffcf5c' : '#7df2ff', 14, 1000)
-        this.fx.cast(v.box.x, v.box.y, v.sprite.displayHeight, f.name)
+        this.floatText(v.box.x, v.box.y - v.h - 14, f.name, skillStyle(f.name)?.kind === 'buff' ? '#ffcf5c' : '#7df2ff', 14, 1000)
+        this.fx.cast(v.box.x, v.box.y, v.h, f.name)
       }
       if (f.x !== undefined && f.y !== undefined && f.r) this.fx.area(f.x, f.y, f.r, f.name)
     } else if (f.f === 'heal') {
@@ -377,7 +401,10 @@ export class GameScene extends Phaser.Scene {
       // Quem voa bate asas o tempo todo e oscila no ar; quem anda só anima ao se mover.
       const hover = v.fly ? -v.fly + Math.sin(this.time.now / 260 + v.ent.id) * 4 : 0
       let bob = 0
-      if (v.sheet) v.sprite.setFrame(v.row * 4 + (moving || v.fly ? frame : 0))
+      // Golpe em curso: troca para a folha de ataque e avança preparar → golpear → acertar → recolher.
+      const at = this.time.now - v.atkStart
+      if (v.atkKey && at < ATK_TOTAL) v.sprite.setTexture(v.atkKey, v.row * 4 + (at < ATK_HIT / 2 ? 0 : at < ATK_HIT ? 1 : at < ATK_HIT + 130 ? 2 : 3))
+      else if (v.sheet) v.sprite.setTexture(v.key, v.row * 4 + (moving || v.fly ? frame : 0))
       else {
         // Imagem única: vira para o lado do movimento e balança ao andar.
         if (moving && Math.abs(dx) > 0.5) v.sprite.scaleX = dx < 0 ? -v.sx : v.sx
