@@ -25,10 +25,11 @@ def remove_background(img):
     if (a[:, :, 3] < 10).mean() > 0.2:      # já veio transparente
         alpha = a[:, :, 3] > 128
     else:
-        r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
-        # magenta e seus tons de borda: vermelho e azul altos, verde bem mais baixo
-        magenta = (r > 150) & (b > 150) & (g < np.minimum(r, b) * 0.55)
-        alpha = ~magenta
+        # cor exata do fundo, lida nos cantos; some só o que está perto dela (violeta e roxo do personagem ficam)
+        h, w = a.shape[:2]
+        bg = np.median(np.array([a[2, 2, :3], a[2, w - 3, :3], a[h - 3, 2, :3], a[h - 3, w - 3, :3]]), axis=0)
+        dist = np.sqrt(((a[:, :, :3] - bg) ** 2).sum(axis=2))
+        alpha = dist > 110
     out = a.copy(); out[:, :, 3] = np.where(alpha, 255, 0)
     # Halo: nos 3 px junto ao fundo, tira o excesso de vermelho+azul que o magenta deixou misturado na cor
     edge = alpha.copy()
@@ -37,6 +38,7 @@ def remove_background(img):
     band = alpha & ~edge
     r, g, b = out[:, :, 0], out[:, :, 1], out[:, :, 2]
     cap = g + (np.abs(r - b) // 2) + 24
+    band &= (np.abs(r - b) < 45) & (np.minimum(r, b) > g + 40)   # só tons magenta; violeta (azul bem maior) fica intacto
     out[:, :, 0] = np.where(band, np.minimum(r, cap), r); out[:, :, 2] = np.where(band, np.minimum(b, cap), b)
     out[:, :, :3] = np.where(alpha[:, :, None], out[:, :, :3], 0)
     return out.astype(np.uint8)
