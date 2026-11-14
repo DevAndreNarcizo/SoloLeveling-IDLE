@@ -31,12 +31,12 @@ export interface ClassDef {
 export const CLASSES: Record<ClassId, ClassDef> = {
   lamina: {
     id: 'lamina', name: 'Lâmina', desc: 'Corpo a corpo resistente. Golpes pesados.',
-    primary: 'for', dmgMult: 1.15, atkPerSec: 1.0, range: 46, hpBase: 240, hpPerLevel: 34,
+    primary: 'for', dmgMult: 1.15, atkPerSec: 1.0, range: 60, hpBase: 240, hpPerLevel: 34,
     start: { for: 14, agi: 8, vit: 14, int: 4, per: 8 }, projectile: 'none',
   },
   vulto: {
     id: 'vulto', name: 'Vulto', desc: 'Corpo a corpo veloz. Muitos golpes e muitos críticos.',
-    primary: 'for', dmgMult: 0.78, atkPerSec: 1.5, range: 42, hpBase: 215, hpPerLevel: 30,
+    primary: 'for', dmgMult: 0.78, atkPerSec: 1.5, range: 56, hpBase: 215, hpPerLevel: 30,
     start: { for: 12, agi: 14, vit: 8, int: 4, per: 10 }, projectile: 'none',
   },
   arcanista: {
@@ -118,12 +118,12 @@ export function monsterStats(level: number, kind: MobKind = 'comum') {
 export interface BandDef { min: number; max: number; monster: string; boss: string }
 export interface RiftDef { id: string; name: string; desc: string; minLevel: number; bands: BandDef[]; /** Largura das paredes do mapa: [lados, topo, base]. */ wall?: [number, number, number] }
 export const RIFTS: RiftDef[] = [
-  { id: 'minas-ocas', name: 'Minas Ocas', desc: 'Galerias abandonadas onde a primeira fenda se abriu.', minLevel: 1, bands: [
+  { id: 'minas-ocas', name: 'Minas Ocas', desc: 'Galerias abandonadas onde a primeira fenda se abriu.', minLevel: 1, wall: [230, 230, 190], bands: [
     { min: 1, max: 5, monster: 'larva-de-ferrugem', boss: 'larva-mae' },
     { min: 6, max: 10, monster: 'morcego-de-cinza', boss: 'asa-ancia' },
     { min: 11, max: 15, monster: 'catador-oco', boss: 'capataz-oco' },
   ] },
-  { id: 'bosque-cinzento', name: 'Bosque Cinzento', desc: 'Floresta coberta de névoa que não se dissipa.', minLevel: 16, bands: [
+  { id: 'bosque-cinzento', name: 'Bosque Cinzento', desc: 'Floresta coberta de névoa que não se dissipa.', minLevel: 16, wall: [200, 200, 180], bands: [
     { min: 16, max: 20, monster: 'lobo-de-nevoa', boss: 'alfa-da-nevoa' },
     { min: 21, max: 25, monster: 'espinheiro-vivo', boss: 'raiz-ancia' },
     { min: 26, max: 30, monster: 'cervo-espectral', boss: 'rei-galhado' },
@@ -133,7 +133,7 @@ export const RIFTS: RiftDef[] = [
     { min: 36, max: 40, monster: 'sacerdote-do-lodo', boss: 'hierofante-do-lodo' },
     { min: 41, max: 45, monster: 'armadura-vazia', boss: 'guardiao-do-selo' },
   ] },
-  { id: 'forja-extinta', name: 'Forja Extinta', desc: 'Fundição colossal cujas brasas voltaram a andar.', minLevel: 46, wall: [330, 280, 250], bands: [
+  { id: 'forja-extinta', name: 'Forja Extinta', desc: 'Fundição colossal cujas brasas voltaram a andar.', minLevel: 46, wall: [400, 290, 250], bands: [
     { min: 46, max: 50, monster: 'brasa-errante', boss: 'coracao-de-fornalha' },
     { min: 51, max: 55, monster: 'golem-de-escoria', boss: 'colosso-de-escoria' },
     { min: 56, max: 60, monster: 'serpe-de-cinza', boss: 'serpe-matriarca' },

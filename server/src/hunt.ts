@@ -42,6 +42,8 @@ const AGGRO_RADIUS = 170
 const EDGE_X = 230, EDGE_Y = 200
 const WALL_X = 160, WALL_Y = 140
 // Mapa de 1920×1280: mais monstros para manter a densidade da caçada.
+// Alcance abaixo disto é corpo a corpo.
+const MELEE_MAX = 120
 const MOB_COUNT = 12
 // O chefe do teste de promoção é mais fraco que o chefe da fenda: a luta é solo e sem ecos.
 const PROMO_HP = 0.5
@@ -110,7 +112,7 @@ export class Hunt {
         const ehp = Math.round(s.maxHp * (1 + m.tb.echoHpPct))
         m.echoes.push({
           id: this.nextId++, team: 0, k: 'e', x: actor.x - 40 - i * 26, y: actor.y + 30 + index * 10, hp: ehp, mhp: ehp, atk: Math.round(s.atk * (1 + m.tb.echoAtkPct)),
-          def: s.def, range: 46, atkPerSec: 1, cd: 0, speed: 140, mult: 1, sprite: MONSTERS[echo.species] ? echo.species : this.opt.monster, name: ECHO_TIERS[echo.tier].name, echo, owner: m,
+          def: s.def, range: 58, atkPerSec: 1, cd: 0, speed: 140, mult: 1, sprite: MONSTERS[echo.species] ? echo.species : this.opt.monster, name: ECHO_TIERS[echo.tier].name, echo, owner: m,
         })
       })
     }
@@ -132,7 +134,7 @@ export class Hunt {
     }
     this.mobs.push({
       id: this.nextId++, team: MOB_TEAM, k: 'm', x: px, y: py, hp: s.maxHp, mhp: s.maxHp, atk: s.atk, def: s.def,
-      range: def.ranged ? 170 : 44, atkPerSec: 0.8, cd: this.rng(), speed: def.speed, mult: 1,
+      range: def.ranged ? 170 : k === 'chefe' ? 86 : 58, atkPerSec: 0.8, cd: this.rng(), speed: def.speed, mult: 1,
       sprite: species, name: def.name, kind: k, level: this.mobLevel, proj: def.ranged ? 'bolt' : undefined,
     })
     if (k === 'chefe') this.bossAlive = true
@@ -157,6 +159,24 @@ export class Hunt {
     const [wx, wt, wb] = this.opt.wall ?? [WALL_X, WALL_Y, WALL_Y]
     a.x = Math.min(this.w - wx, Math.max(wx, a.x + ((tx - a.x) / d) * step))
     a.y = Math.min(this.h - wb, Math.max(wt, a.y + ((ty - a.y) / d) * step))
+  }
+  // Corpo a corpo: o atacante para AO LADO do alvo, na mesma linha, em vez de subir em cima dele.
+  // Cada um ganha uma pequena altura própria para vários atacantes não ficarem empilhados.
+  private slot(a: Actor, t: Actor) {
+    let side = a.x === t.x ? (a.id % 2 ? 1 : -1) : a.x > t.x ? 1 : -1
+    // Alvo encostado na parede: o lado de fora não existe, então ataca pelo lado de dentro.
+    const wx = (this.opt.wall ?? [WALL_X])[0], x = t.x + side * a.range * 0.9
+    if (x < wx || x > this.w - wx) side = -side
+    const wt = this.opt.wall?.[1] ?? WALL_Y, wb = this.opt.wall?.[2] ?? WALL_Y
+    return { x: t.x + side * a.range * 0.9, y: Math.min(this.h - wb, Math.max(wt, t.y + ((a.id % 5) - 2) * 8)) }
+  }
+  private inReach(a: Actor, t: Actor): boolean {
+    if (a.range >= MELEE_MAX) return dist(a, t) <= a.range
+    return Math.abs(a.x - t.x) <= a.range && Math.abs(a.y - t.y) <= 22 && Math.abs(a.x - t.x) >= a.range * 0.45
+  }
+  private approach(a: Actor, t: Actor, dt: number) {
+    if (a.range >= MELEE_MAX) return this.moveToward(a, t.x, t.y, dt)
+    const p = this.slot(a, t); this.moveToward(a, p.x, p.y, dt)
   }
   private nearest(from: { x: number; y: number }, list: Actor[]): Actor | undefined {
     let best: Actor | undefined, bd = Infinity
@@ -197,7 +217,7 @@ export class Hunt {
         m.buffs[b] = s.seconds ?? 6
         if (b === 'shield') m.shield = Math.round(a.mhp * 0.25)
       } else {
-        if (dist(a, target) > a.range) continue
+        if (!this.inReach(a, target)) continue
         const mult = a.mult * (s.mult ?? 1) * (1 + m.tb.skillPct)
         const hits = s.kind === 'aoe' ? enemies.filter((e) => e.hp > 0 && dist(e, target) <= (s.radius ?? 90)) : [target]
         // Em área: vale contra dois ou mais, ou como golpe forte num alvo ainda inteiro.
@@ -219,10 +239,10 @@ export class Hunt {
     a.cd = Math.max(0, a.cd - dt)
     if (!target || target.hp <= 0) return
     const m = a.k === 'p' ? a.owner : undefined
-    if (dist(a, target) > a.range) { this.moveToward(a, target.x, target.y, dt); if (!m) return }
+    if (!this.inReach(a, target)) { this.approach(a, target, dt); if (!m) return }
     if (a.cd > 0) return
     if (m && this.castSkill(m, target, enemies, fighting)) { a.cd = 0.6; return }
-    if (dist(a, target) > a.range) return
+    if (!this.inReach(a, target)) return
     a.cd = 1 / (a.atkPerSec * (m && m.buffs.haste > 0 ? 1.6 : 1))
     const crit = !!m && this.rng() < m.d.crit + (m.buffs.focus > 0 ? 0.3 : 0)
     this.damage(a, target, hitDamage(a.atk, a.mult, target.def, this.rng()) * (crit ? m!.d.critMult : 1), crit)

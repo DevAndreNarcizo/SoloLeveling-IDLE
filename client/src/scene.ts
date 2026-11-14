@@ -5,6 +5,7 @@ import { NPCS } from '../../shared/content.ts'
 import type { Ent, Fx, RoomInfo } from '../../shared/protocol.ts'
 import { assetUrl, hasAsset, monsterKey } from './assets.ts'
 import { onMessage, send } from './net.ts'
+import { COLOR, Effects, skillStyle, strikeColor } from './fx.ts'
 
 // Formatos que a cena não carrega: ícones e fundo são da interface; 'props' só alimenta o montador de mapas.
 const UI_ONLY = new Set(['icon', 'wide', 'props'])
@@ -14,6 +15,8 @@ const LEGACY = 1.5
 const scaleFor = (key: string) => (ANIMATED.has(key) ? 1 : LEGACY)
 const CELL = 64 // tamanho da célula dos marcadores gerados por código
 const hash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0 }
+// Criaturas que voam ou flutuam: ficam um pouco acima do chão e oscilam no ar.
+const FLYERS = new Set(['morcego-de-cinza', 'asa-ancia', 'brasa-errante', 'coracao-de-fornalha'])
 const hsl = (h: number, s: number, l: number) => `hsl(${h % 360} ${s}% ${l}%)`
 const TILE_COLORS: Record<string, [string, string]> = {
   'mapas/cidade': ['#1b1a2b', '#252338'], 'mapas/minas-ocas': ['#231a14', '#30241b'], 'mapas/bosque-cinzento': ['#1a2320', '#24302b'],
@@ -23,6 +26,12 @@ const TILE_COLORS: Record<string, [string, string]> = {
 interface View {
   box: Phaser.GameObjects.Container; sprite: Phaser.GameObjects.Image; bar?: Phaser.GameObjects.Graphics
   tx: number; ty: number; row: number; ent: Ent; key: string; seen: number; sheet: boolean; sx: number
+  /** Deslocamento do sprite dentro da caixa: investida, recuo e empurrão ao ser atingido. */
+  ox: number; oy: number
+  fly: number // altura de voo (0 = anda no chão)
+  flashUntil: number // enquanto o clarão de impacto dura, a cor normal não volta
+  bubble?: Phaser.GameObjects.Ellipse // cúpula da Barreira
+  dying?: boolean
 }
 
 export class GameScene extends Phaser.Scene {
@@ -35,6 +44,8 @@ export class GameScene extends Phaser.Scene {
   private lastMove = '0,0'
   private dest: { x: number; y: number } | null = null
   private snapN = 0
+  private roomSnaps = 0
+  private fx!: Effects
   onNearNpc: (npc: (typeof NPCS)[number] | null) => void = () => {}
   private nearNpc: (typeof NPCS)[number] | null = null
 
@@ -57,6 +68,7 @@ export class GameScene extends Phaser.Scene {
         for (let i = 0; i < g.cols * g.rows; i++) tex.add(i, 0, (i % g.cols) * fw, Math.floor(i / g.cols) * fh, fw, fh)
       }
     }
+    this.fx = new Effects(this)
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,LEFT,DOWN,RIGHT,E', false) as Record<string, Phaser.Input.Keyboard.Key>
     this.input.keyboard!.on('keydown-E', () => { if (!this.typing()) this.interact() })
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -140,7 +152,7 @@ export class GameScene extends Phaser.Scene {
 
   // ---------- Sala ----------
   private enterRoom(room: RoomInfo, you: number) {
-    this.room = room; this.you = you; this.dest = null; this.lastMove = '0,0'
+    this.room = room; this.you = you; this.dest = null; this.lastMove = '0,0'; this.roomSnaps = 0
     for (const v of this.views.values()) v.box.destroy()
     this.views.clear()
     for (const d of this.decor) d.destroy()
@@ -152,13 +164,16 @@ export class GameScene extends Phaser.Scene {
     this.fitCamera()
     this.scale.off('resize', this.fitCamera, this); this.scale.on('resize', this.fitCamera, this)
     this.cameras.main.setBackgroundColor('#07060d')
+    this.decor.push(...this.fx.ambient(room.map, room.w, room.h))
     if (room.kind === 'city') {
       for (const n of NPCS) {
         const key = `npcs/${n.id}`
         const img = this.add.image(n.x, n.y, key).setScale(scaleFor(key)).setOrigin(0.5, 1).setDepth(n.y)
-        this.decor.push(img)
+        this.decor.push(this.add.ellipse(n.x, n.y - 2, img.displayWidth * 0.7, 10, 0x000000, 0.35).setDepth(n.y - 1), img)
+        // Respiração: sobe e desce um pixel, em passos (sem borrar o pixel art), cada NPC no seu ritmo.
+        this.tweens.add({ targets: img, y: n.y - 1, duration: 900 + (n.x % 7) * 60, yoyo: true, repeat: -1, ease: 'Stepped' })
         this.decor.push(this.add.text(n.x, n.y - img.displayHeight - 10, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
-        if (n.panel === 'fendas') this.decor.push(this.add.image(n.x + 80, n.y - 6, 'objetos/fenda').setScale(LEGACY).setOrigin(0.5, 1).setDepth(n.y - 1))
+        if (n.panel === 'fendas') this.decor.push(...this.fx.portal(n.x + 92, n.y - 2))
       }
     }
   }
@@ -169,8 +184,21 @@ export class GameScene extends Phaser.Scene {
     return monsterKey(e.s)
   }
 
+  /** Devolve o sprite à cor normal: eco arroxeado, caçador com barreira azulado. */
+  private baseTint(v: View) {
+    if (v.ent.k === 'e') v.sprite.setTint(0x8a6cff)
+    else if (v.ent.k === 'p' && v.ent.sh) v.sprite.setTint(0x9fd8ff)
+    else v.sprite.clearTint()
+  }
+  /** Empurra o sprite e deixa voltar sozinho (investida, recuo, impacto). */
+  private nudge(v: View, dx: number, dy: number, duration = 70) {
+    this.tweens.add({ targets: v, ox: dx, oy: dy, duration, yoyo: true, ease: 'Quad.easeOut' })
+  }
+
   private applySnap(ents: Ent[], fx: Fx[]) {
-    this.snapN++
+    this.snapN++; this.roomSnaps++
+    const dying = new Set<number>()
+    for (const f of fx) if (f.f === 'die') dying.add(f.id)
     for (const e of ents) {
       let v = this.views.get(e.id)
       if (!v) {
@@ -178,22 +206,39 @@ export class GameScene extends Phaser.Scene {
         // Escala inteira: cada pixel do sprite vira um bloco nítido. Elites são um pouco maiores.
         const sprite = this.add.image(0, 0, key).setScale(scaleFor(key) * (e.mk === 'elite' ? 1.25 : 1)).setOrigin(0.5, 1)
         const size = sprite.displayHeight
+        const fly = e.k === 'm' && FLYERS.has(e.s) ? 16 : 0
         const box = this.add.container(e.x, e.y, [sprite])
+        // Sombra no chão: prende o personagem ao cenário. Quem voa tem sombra menor.
+        if (e.k !== 'c') box.addAt(this.add.ellipse(0, -2, Math.min(sprite.displayWidth, size) * (fly ? 0.4 : 0.6), fly ? 7 : 10, 0x000000, fly ? 0.25 : 0.38), 0)
         if (e.k === 'e') sprite.setTint(0x8a6cff).setAlpha(0.88)
         if (e.n && e.k !== 'c') {
           const color = e.k === 'p' ? (e.me ? '#ffffff' : '#c9c3e6') : e.k === 'e' ? '#b79cff' : e.mk === 'chefe' ? '#ff6b7a' : e.mk === 'elite' ? '#ffcf5c' : '#d7d3e8'
           const label = e.k === 'p' && e.r ? `[${e.r}] ${e.g ? `<${e.g}> ` : ''}${e.n}` : e.n
-          box.add(this.add.text(0, -size - 12, label, { fontSize: '11px', color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5))
+          box.add(this.add.text(0, -size - 12 - fly, label, { fontSize: '11px', color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5))
         }
-        v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX }
+        v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX, ox: 0, oy: 0, fly, flashUntil: 0 }
         if (e.k !== 'c' && this.room?.kind !== 'city') { v.bar = this.add.graphics(); box.add(v.bar) }
         this.views.set(e.id, v)
+        // Quem aparece no meio da caçada surge de um rasgo de sombra; ecos sobem do chão.
+        if (this.roomSnaps > 1 && this.room?.kind !== 'city' && (e.k === 'm' || e.k === 'e')) {
+          const boss = e.mk === 'chefe'
+          this.fx.spawn(e.x, e.y, boss)
+          sprite.setScale(v.sx * 0.2, sprite.scaleY * 0.2).setAlpha(0)
+          this.tweens.add({ targets: sprite, scaleX: v.sx, scaleY: Math.abs(v.sx), alpha: e.k === 'e' ? 0.88 : 1, duration: boss ? 520 : 260, ease: 'Back.easeOut' })
+          if (boss) this.floatText(e.x, e.y - size - 30, `⚠ ${e.n ?? 'CHEFE'}`, '#ff6b7a', 20, 1500)
+        }
       }
       v.tx = e.x; v.ty = e.y; v.ent = e; v.seen = this.snapN
       if (e.k === 'c') v.sprite.setAlpha(e.hp ? 1 : 0.35)
-      else if (e.k === 'p') { if (e.sh) v.sprite.setTint(0x9fd8ff); else v.sprite.clearTint() }
+      else if (e.k === 'p') {
+        if (this.time.now >= v.flashUntil) this.baseTint(v)
+        v.sprite.setAlpha(e.hp <= 0 ? 0.35 : 1)
+        // Barreira: cúpula visível enquanto o escudo durar
+        if (e.sh && !v.bubble) { const h = v.sprite.displayHeight; v.bubble = this.add.ellipse(0, -h / 2, h * 1.25, h * 1.3, COLOR.cyan, 0.14).setStrokeStyle(2, COLOR.cyan, 0.9); v.box.add(v.bubble); this.tweens.add({ targets: v.bubble, alpha: 0.55, duration: 600, yoyo: true, repeat: -1 }) }
+        else if (!e.sh && v.bubble) { v.bubble.destroy(); v.bubble = undefined }
+      }
       if (v.bar) {
-        const w = e.mk === 'chefe' ? 90 : 46, y = -v.sprite.displayHeight - 4
+        const w = e.mk === 'chefe' ? 90 : 46, y = -v.sprite.displayHeight - 4 - v.fly
         v.bar.clear().fillStyle(0x000000, 0.7).fillRect(-w / 2 - 1, y - 1, w + 2, 6)
           .fillStyle(e.k === 'm' ? 0xe5484d : e.k === 'e' ? 0x8b5cf6 : 0x5fd38a).fillRect(-w / 2, y, w * Math.max(0, e.hp / e.mhp), 4)
       }
@@ -201,52 +246,99 @@ export class GameScene extends Phaser.Scene {
     for (const [id, v] of this.views) {
       if (v.seen === this.snapN) continue
       this.views.delete(id)
-      this.tweens.add({ targets: v.box, alpha: 0, duration: 220, onComplete: () => v.box.destroy() })
+      if (dying.has(id) && v.ent.k !== 'c') this.dieAnim(v)
+      else this.tweens.add({ targets: v.box, alpha: 0, duration: 220, onComplete: () => v.box.destroy() })
     }
-    for (const f of fx) this.playFx(f)
+    for (const f of fx) this.playFx(f, dying)
   }
 
-  private floatText(x: number, y: number, text: string, color: string, size = 14) {
-    const t = this.add.text(x + (Math.random() - 0.5) * 16, y, text, { fontSize: `${size}px`, color, fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(9000)
-    this.tweens.add({ targets: t, y: y - 34, alpha: 0, duration: 750, onComplete: () => t.destroy() })
+  /** Morte: clarão, queda e dissolução em sombra. O corpo some; o resquício (se houver) fica no chão. */
+  private dieAnim(v: View) {
+    v.dying = true
+    const boss = v.ent.mk === 'chefe', h = v.sprite.displayHeight
+    v.sprite.setTintFill(0xffffff); v.bar?.destroy()
+    this.time.delayedCall(70, () => { if (v.sprite.active) v.sprite.setTintFill(v.ent.k === 'p' ? 0x7a1f2a : 0x2a1f4a) })
+    this.fx.death(v.box.x, v.box.y, h, boss)
+    this.tweens.add({ targets: v.sprite, scaleY: v.sprite.scaleY * 0.15, scaleX: v.sprite.scaleX * 1.25, alpha: 0, delay: boss ? 180 : 60, duration: boss ? 620 : 300, ease: 'Quad.easeIn', onComplete: () => v.box.destroy() })
+  }
+
+  private floatText(x: number, y: number, text: string, color: string, size = 14, life = 750) {
+    const t = this.add.text(x + (Math.random() - 0.5) * 16, y, text, { fontSize: `${size}px`, color, fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(9000).setScale(1.5)
+    this.tweens.add({ targets: t, scale: 1, duration: 110, ease: 'Back.easeOut' })
+    this.tweens.add({ targets: t, y: y - 38, alpha: 0, delay: life * 0.25, duration: life * 0.75, ease: 'Quad.easeIn', onComplete: () => t.destroy() })
   }
   private burst(key: string, x: number, y: number, size: number) {
     const img = this.add.image(x, y, key, 0).setDisplaySize(size, size).setDepth(8999)
     this.tweens.addCounter({ from: 0, to: 3.99, duration: 380, onUpdate: (tw) => img.setFrame(Math.floor(tw.getValue() ?? 0)), onComplete: () => img.destroy() })
   }
-  private playFx(f: Fx) {
+  /** Reação de quem apanha: clarão branco, empurrão, faíscas e o número do dano. */
+  private hitReact(f: Extract<Fx, { f: 'hit' }>, b: View, ang: number, color: number, lethal: boolean) {
+    const h = b.sprite.displayHeight, bx = b.box.x, by = b.box.y - h * 0.5 - b.fly
+    const boss = b.ent.mk === 'chefe', mine = !!b.ent.me, big = !!f.crit || !!f.skill
+    if (!lethal && b.sprite.active) {
+      b.sprite.setTintFill(0xffffff); b.flashUntil = this.time.now + 60
+      this.time.delayedCall(60, () => { if (b.sprite.active && !b.dying) this.baseTint(b) })
+      if (!boss) this.nudge(b, Math.cos(ang) * (big ? 9 : 5), Math.sin(ang) * (big ? 6 : 3), 60)
+    }
+    this.fx.impact(bx, by, color, big ? 26 : 16, big ? 8 : 6)
+    this.fx.sparks(bx, by, b.ent.k === 'p' ? COLOR.red : color, big ? 9 : 4, big ? 100 : 60)
+    if (f.crit) this.fx.glow(bx, by, 110, COLOR.gold, 200, 0.7)
+    if (mine) this.cameras.main.shake(90, big ? 0.006 : 0.0025, false)
+    else if (f.crit && this.views.get(f.from)?.ent.me) this.cameras.main.shake(70, 0.003, false)
+    // Dano zero é golpe todo absorvido pela Barreira: mostra isso em vez de um "0".
+    if (f.dmg === 0) { this.floatText(bx, by - h * 0.35, 'absorvido', '#7df2ff', 12); return }
+    const text = `${f.crit ? '✦' : ''}${f.dmg}${f.crit ? '!' : ''}`
+    this.floatText(bx, by - h * 0.35, text, mine ? '#ff6b7a' : f.skill ? '#7df2ff' : f.crit ? '#ffcf5c' : '#ffffff', f.skill ? 20 : f.crit ? 19 : 13)
+  }
+
+  private playFx(f: Fx, dying: Set<number> = new Set()) {
     if (f.f === 'hit') {
       const a = this.views.get(f.from), b = this.views.get(f.to)
       if (!b) return
-      const bx = b.box.x, by = b.box.y - 40
-      if (a) {
-        const dx = Math.sign(b.box.x - a.box.x)
-        this.tweens.add({ targets: a.sprite, x: dx * 10, duration: 70, yoyo: true })
-        // Parado, o atacante vira para o alvo (a linha da folha é a direção).
-        const ddx = b.box.x - a.box.x, ddy = b.box.y - a.box.y
-        a.row = Math.abs(ddx) > Math.abs(ddy) ? (ddx < 0 ? 1 : 2) : ddy < 0 ? 3 : 0
-        if (f.proj) {
-          const key = f.proj === 'arrow' ? 'efeitos/flecha' : 'efeitos/projetil-arcano'
-          const p = this.add.image(a.box.x, a.box.y - 40, key).setDisplaySize(36, 36).setDepth(8998).setRotation(Math.atan2(by - (a.box.y - 40), bx - a.box.x))
-          this.tweens.add({ targets: p, x: bx, y: by, duration: 110, onComplete: () => p.destroy() })
-        } else this.burst('efeitos/golpe', bx, by, 64)
+      const lethal = dying.has(f.to)
+      const bh = b.sprite.displayHeight, bx = b.box.x, by = b.box.y - bh * 0.5 - b.fly
+      if (!a) { this.hitReact(f, b, 0, COLOR.white, lethal); return }
+      const ax = a.box.x, ay = a.box.y - a.sprite.displayHeight * 0.5 - a.fly
+      const ang = Math.atan2(b.box.y - a.box.y, b.box.x - a.box.x), cx = Math.cos(ang), cy = Math.sin(ang)
+      const boss = a.ent.mk === 'chefe', color = strikeColor(a.ent.k, a.ent.s, boss)
+      // Parado, o atacante vira para o alvo (a linha da folha é a direção).
+      a.row = Math.abs(cx) > Math.abs(cy) ? (cx < 0 ? 1 : 2) : cy < 0 ? 3 : 0
+      if (f.proj) {
+        // Disparo: recuo de quem atira, projétil com rastro e impacto só na chegada.
+        this.nudge(a, -cx * 5, -cy * 3, 60)
+        this.fx.glow(ax + cx * 14, ay + cy * 10, f.skill ? 90 : 50, color, 160, 0.8)
+        const key = f.proj === 'arrow' ? 'efeitos/flecha' : 'efeitos/projetil-arcano'
+        this.fx.projectile(key, ax + cx * 14, ay + cy * 10, bx, by, color, f.skill ? 54 : 36, () => {
+          if (f.skill) { this.fx.glow(bx, by, 150, color, 280, 0.9); this.fx.ring(b.box.x, b.box.y, 40, color, 300, 2) }
+          this.hitReact(f, b, ang, color, lethal)
+        })
+      } else {
+        // Corpo a corpo: investida na direção do alvo e corte em meia-lua sobre ele.
+        const reach = boss ? 22 : 14
+        this.nudge(a, cx * reach, cy * reach * 0.7, boss ? 110 : 70)
+        const size = (boss ? 58 : 34) * (f.skill ? 1.5 : f.crit ? 1.2 : 1)
+        this.fx.slash(bx - cx * 8, by - cy * 6, ang, color, size, f.skill ? 1.25 : 1)
+        if (f.skill) { this.fx.slash(bx - cx * 8, by - cy * 6, ang + Math.PI, color, size * 0.8); this.fx.glow(bx, by, 130, color, 240, 0.8) }
+        if (boss) { this.fx.ring(b.box.x, b.box.y, 46, COLOR.red, 300, 2); this.cameras.main.shake(100, 0.004, false) }
+        this.hitReact(f, b, ang, color, lethal)
       }
-      const mine = b.ent.me
-      this.floatText(bx, by - 14, `${f.crit ? '✦' : ''}${f.dmg}`, mine ? '#ff6b7a' : f.skill ? '#7df2ff' : f.crit ? '#ffcf5c' : '#ffffff', f.skill ? 19 : f.crit ? 18 : 13)
-      this.tweens.add({ targets: b.sprite, alpha: 0.5, duration: 50, yoyo: true })
     } else if (f.f === 'skill') {
       const v = this.views.get(f.id)
-      if (v) this.floatText(v.box.x, v.box.y - v.sprite.displayHeight - 4, f.name, '#7df2ff', 13)
-      if (f.x !== undefined && f.y !== undefined && f.r) {
-        const ring = this.add.circle(f.x, f.y, f.r, 0x8b5cf6, 0.22).setStrokeStyle(2, 0xc4a3ff, 0.9).setDepth(8990).setScale(0.3)
-        this.tweens.add({ targets: ring, scale: 1, alpha: 0, duration: 380, onComplete: () => ring.destroy() })
+      if (v) {
+        this.floatText(v.box.x, v.box.y - v.sprite.displayHeight - 14, f.name, skillStyle(f.name)?.kind === 'buff' ? '#ffcf5c' : '#7df2ff', 14, 1000)
+        this.fx.cast(v.box.x, v.box.y, v.sprite.displayHeight, f.name)
       }
+      if (f.x !== undefined && f.y !== undefined && f.r) this.fx.area(f.x, f.y, f.r, f.name)
     } else if (f.f === 'heal') {
-      const v = this.views.get(f.to); if (v) this.floatText(v.box.x, v.box.y - 50, `+${f.amount}`, '#5fd38a')
+      const v = this.views.get(f.to); if (v) { this.fx.heal(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 50, `+${f.amount}`, '#5fd38a') }
     } else if (f.f === 'level') {
-      const v = this.views.get(f.id); if (v) { this.burst('efeitos/subir-nivel', v.box.x, v.box.y - 26, 96); this.floatText(v.box.x, v.box.y - 70, 'SUBIU DE NÍVEL', '#ffcf5c', 16) }
+      const v = this.views.get(f.id); if (v) { this.fx.levelUp(v.box.x, v.box.y); this.burst('efeitos/subir-nivel', v.box.x, v.box.y - 26, 96); this.floatText(v.box.x, v.box.y - 90, 'SUBIU DE NÍVEL', '#ffcf5c', 18, 1400) }
+    } else if (f.f === 'die') {
+      // Caçador que cai continua na sala (volta depois): só o aviso e as faíscas.
+      const v = this.views.get(f.id)
+      if (v && v.ent.k === 'p') { this.fx.sparks(v.box.x, v.box.y - 40, COLOR.red, 12, 90, 500); this.fx.ring(v.box.x, v.box.y, 44, COLOR.red, 420, 3); this.floatText(v.box.x, v.box.y - 80, 'CAIU', '#ff6b7a', 16, 1200) }
     } else if (f.f === 'extract') {
-      this.burst('efeitos/evocacao', f.x, f.y - 16, 84)
+      this.fx.extract(f.x, f.y, f.ok); this.burst('efeitos/evocacao', f.x, f.y - 16, 84)
       this.floatText(f.x, f.y - 40, f.ok ? 'ECO EVOCADO' : 'falhou', f.ok ? '#b79cff' : '#9a93b5', f.ok ? 16 : 12)
     }
   }
@@ -282,12 +374,16 @@ export class GameScene extends Phaser.Scene {
       if (v.ent.k === 'c') continue
       const moving = d > 1.5
       if (moving) v.row = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : dy < 0 ? 3 : 0
-      if (v.sheet) v.sprite.setFrame(v.row * 4 + (moving ? frame : 0))
+      // Quem voa bate asas o tempo todo e oscila no ar; quem anda só anima ao se mover.
+      const hover = v.fly ? -v.fly + Math.sin(this.time.now / 260 + v.ent.id) * 4 : 0
+      let bob = 0
+      if (v.sheet) v.sprite.setFrame(v.row * 4 + (moving || v.fly ? frame : 0))
       else {
         // Imagem única: vira para o lado do movimento e balança ao andar.
         if (moving && Math.abs(dx) > 0.5) v.sprite.scaleX = dx < 0 ? -v.sx : v.sx
-        v.sprite.y = moving ? -Math.abs(Math.sin(this.time.now / 110 + v.ent.id)) * 4 : 0
+        bob = moving ? -Math.abs(Math.sin(this.time.now / 110 + v.ent.id)) * 4 : 0
       }
+      v.sprite.setPosition(v.ox, v.oy + hover + bob)
     }
     if (me) {
       const cam = this.cameras.main

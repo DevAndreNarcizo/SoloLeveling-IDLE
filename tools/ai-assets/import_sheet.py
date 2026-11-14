@@ -3,6 +3,7 @@
 Uso:  python tools/ai-assets/import_sheet.py <imagem.png> <id do asset> [--height N]
       ex.: python tools/ai-assets/import_sheet.py ~/Downloads/lamina.png cacadores/lamina
       quadro defeituoso: --replace 15=13m  (o 15º passa a ser o 13º espelhado)
+      criatura que voa: --float   |   chamas com borda rosada: --fire
       névoa ou fumaça rosada: --mist   |   manter partículas soltas: --keep-specks
 
 A imagem deve ter 4 colunas x 4 linhas (linhas: baixo, esquerda, direita, cima; 4 quadros de caminhada cada),
@@ -88,6 +89,7 @@ def main():
                     help="troca um quadro defeituoso por outro (1 a 16, lendo linha a linha); m = espelhado. Ex.: --replace 15=13m")
     ap.add_argument("--mist", action="store_true", help="limpa o tom rosado de névoa/fumaça semitransparente (não use em personagens com magenta ou rosa)")
     ap.add_argument("--fire", action="store_true", help="limpa a borda rosada de chamas (não use em personagens com roxo, rosa ou violeta)")
+    ap.add_argument("--float", action="store_true", help="criatura que voa ou flutua: alinha os quadros pelo centro do corpo, não pelos pés")
     ap.add_argument("--keep-specks", action="store_true", help="mantém partículas soltas (cinzas, faíscas) em vez de apagá-las")
     args = ap.parse_args()
     a = remove_background(Image.open(args.image), args.mist, args.fire)
@@ -103,15 +105,21 @@ def main():
         # âncora horizontal: centro do tronco (metade de cima), mais estável que a largura total ao andar
         upper = ys < top + (bottom - top) * 0.5
         anchor = int(np.median(xs[upper]))
-        frames.append((cell, top, bottom, left, right, anchor))
+        if args.float:
+            # Voadores: o corpo é a parte mais densa. Centraliza por ela, para as asas baterem sem o corpo pular.
+            col = (cell[:, :, 3] > 0).sum(axis=0).astype(float); rowm = (cell[:, :, 3] > 0).sum(axis=1).astype(float)
+            col, rowm = col ** 3, rowm ** 3   # dá mais peso às colunas e linhas cheias (corpo) que às finas (asas)
+            anchor = int(round((col * np.arange(len(col))).sum() / col.sum())); mid = int(round((rowm * np.arange(len(rowm))).sum() / rowm.sum()))
+            frames.append((cell, top, bottom, left, right, anchor, mid)); continue
+        frames.append((cell, top, bottom, left, right, anchor, None))
     for rule in args.replace:
         dst, src = rule.split("=")
         mirror = src.endswith("m"); src = int(src.rstrip("m")) - 1; dst = int(dst) - 1
-        cell, top, bottom, left, right, anchor = frames[src]
+        cell, top, bottom, left, right, anchor, mid = frames[src]
         if mirror:
             w = cell.shape[1]; cell = cell[:, ::-1].copy()
             left, right, anchor = w - 1 - right, w - 1 - left, w - 1 - anchor
-        frames[dst] = (cell, top, bottom, left, right, anchor)
+        frames[dst] = (cell, top, bottom, left, right, anchor, mid)
         print(f"  quadro {dst + 1} substituído pelo {src + 1}{' espelhado' if mirror else ''}")
     tall = max(f[2] - f[1] + 1 for f in frames)
     # Altura padrão: 80 px (chefes, 128 px), exibida em tamanho real.
@@ -122,13 +130,15 @@ def main():
     # canvas comum a todos os quadros, com os pés na mesma linha e o tronco no mesmo eixo
     half = max(max(f[5] - f[3], f[4] - f[5]) for f in frames) + 2
     up = max(f[2] - f[1] for f in frames) + 2
+    if args.float: up = 2 * max(max(f[6] - f[1], f[2] - f[6]) for f in frames) + 4
     cell_w, cell_h = int(np.ceil(2 * half * k)) + 4, int(np.ceil(up * k)) + 4
     side = max(cell_w, cell_h)
     sheet = Image.new("RGBA", (side * 4, side * 4), (0, 0, 0, 0))
-    for i, (cell, top, bottom, left, right, anchor) in enumerate(frames):
+    for i, (cell, top, bottom, left, right, anchor, mid) in enumerate(frames):
         # borda de folga para o recorte ficar sempre simétrico em volta do eixo do tronco
-        pad = np.pad(cell, ((up, 0), (half, half), (0, 0)))
-        crop = Image.fromarray(pad[bottom + 1:bottom + up + 1, anchor:anchor + 2 * half], "RGBA")
+        pad = np.pad(cell, ((up, up), (half, half), (0, 0)))
+        base = bottom if mid is None else mid + up // 2 - 1   # voadores: mesma altura do corpo em todos os quadros
+        crop = Image.fromarray(pad[base + 1:base + up + 1, anchor:anchor + 2 * half], "RGBA")
         w, h = max(1, round(crop.width * k)), max(1, round(crop.height * k))
         small = shrink(np.array(crop), w, h)
         ox = (i % 4) * side + (side - w) // 2
