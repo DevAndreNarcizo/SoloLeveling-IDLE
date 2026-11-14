@@ -72,6 +72,14 @@ export class GameScene extends Phaser.Scene {
     this.game.events.emit('scene-ready')
   }
 
+  /** Em telas maiores que o mapa, centraliza o mapa em vez de encostá-lo num canto. */
+  private fitCamera() {
+    const room = this.room, cam = this.cameras.main
+    if (!room) return
+    const ex = Math.max(0, (cam.width - room.w) / 2), ey = Math.max(0, (cam.height - room.h) / 2)
+    cam.setBounds(-ex, -ey, room.w + 2 * ex, room.h + 2 * ey)
+  }
+
   private typing() { const el = document.activeElement; return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement }
   interact() {
     if (this.room?.kind === 'city') { if (this.nearNpc) this.game.events.emit('npc', this.nearNpc.panel) }
@@ -138,7 +146,8 @@ export class GameScene extends Phaser.Scene {
     // O mapa é uma imagem só, com metade do tamanho do mundo, exibida ampliada (pixels nítidos).
     const mapKey = this.textures.exists(`mapas/${room.map}`) ? `mapas/${room.map}` : 'mapas/arena'
     this.ground = this.add.image(0, 0, mapKey).setOrigin(0).setDisplaySize(room.w, room.h).setDepth(-10)
-    this.cameras.main.setBounds(0, 0, room.w, room.h)
+    this.fitCamera()
+    this.scale.off('resize', this.fitCamera, this); this.scale.on('resize', this.fitCamera, this)
     this.cameras.main.setBackgroundColor('#07060d')
     if (room.kind === 'city') {
       for (const n of NPCS) {

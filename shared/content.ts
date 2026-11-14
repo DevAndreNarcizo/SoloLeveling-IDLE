@@ -146,11 +146,12 @@ export const CITY_MAP = { w: 1400, h: 1000 }
 export const CITY_NAME = 'Vértice'
 
 export interface NpcDef { id: string; name: string; role: string; panel: string; x: number; y: number }
+// Posições casadas com as quatro praças redondas das diagonais do mapa da cidade (mapas/cidade.png).
 export const NPCS: NpcDef[] = [
-  { id: 'guardia-das-fendas', name: 'Ísis, Guardiã das Fendas', role: 'Abre as caçadas', panel: 'fendas', x: 700, y: 260 },
-  { id: 'mercador', name: 'Tobias, o Mercador', role: 'Vende consumíveis', panel: 'loja', x: 380, y: 520 },
-  { id: 'ferreira', name: 'Dária, a Ferreira', role: 'Aprimora equipamentos', panel: 'forja', x: 1020, y: 520 },
-  { id: 'arquivista', name: 'Noé, o Arquivista', role: 'Mostra o ranking', panel: 'ranking', x: 700, y: 760 },
+  { id: 'guardia-das-fendas', name: 'Ísis, Guardiã das Fendas', role: 'Abre as caçadas', panel: 'fendas', x: 290, y: 310 },
+  { id: 'mercador', name: 'Tobias, o Mercador', role: 'Vende consumíveis', panel: 'loja', x: 290, y: 728 },
+  { id: 'ferreira', name: 'Dária, a Ferreira', role: 'Aprimora equipamentos', panel: 'forja', x: 1110, y: 310 },
+  { id: 'arquivista', name: 'Noé, o Arquivista', role: 'Mostra o ranking', panel: 'ranking', x: 1110, y: 728 },
 ]
 
 // ---------- Progressão ----------

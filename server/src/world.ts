@@ -17,6 +17,7 @@ const NAME_RE = /^[\p{L}\p{N}_]{3,16}$/u
 const GUILD_NAME_RE = /^[\p{L}\p{N} ]{3,20}$/u
 const TAG_RE = /^[\p{L}\p{N}]{2,4}$/u
 const CITY_SPEED = 190
+const CITY_EDGE_X = 190, CITY_EDGE_TOP = 235, CITY_EDGE_BOTTOM = 190
 const CITY_MAX_PLAYERS_IN_SNAPSHOT = 60
 const INVITE_MS = 60_000
 
@@ -840,8 +841,9 @@ export class World {
     for (const s of this.sessions.values()) {
       if (!s.char) continue
       if (s.hunt) { hunts.add(s.hunt); continue }
-      s.x = Math.min(CITY_MAP.w - 24, Math.max(24, s.x + s.dx * CITY_SPEED * dt))
-      s.y = Math.min(CITY_MAP.h - 24, Math.max(24, s.y + s.dy * CITY_SPEED * dt))
+      // Limites da praça: ninguém anda por cima das casas da borda do mapa.
+      s.x = Math.min(CITY_MAP.w - CITY_EDGE_X, Math.max(CITY_EDGE_X, s.x + s.dx * CITY_SPEED * dt))
+      s.y = Math.min(CITY_MAP.h - CITY_EDGE_BOTTOM, Math.max(CITY_EDGE_TOP, s.y + s.dy * CITY_SPEED * dt))
       city.push(s)
     }
     for (const h of hunts) {
