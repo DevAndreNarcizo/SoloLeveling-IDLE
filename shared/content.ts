@@ -116,7 +116,7 @@ export function monsterStats(level: number, kind: MobKind = 'comum') {
 
 // ---------- Fendas (dungeons) ----------
 export interface BandDef { min: number; max: number; monster: string; boss: string }
-export interface RiftDef { id: string; name: string; desc: string; minLevel: number; bands: BandDef[] }
+export interface RiftDef { id: string; name: string; desc: string; minLevel: number; bands: BandDef[]; /** Largura das paredes do mapa: [lados, topo, base]. */ wall?: [number, number, number] }
 export const RIFTS: RiftDef[] = [
   { id: 'minas-ocas', name: 'Minas Ocas', desc: 'Galerias abandonadas onde a primeira fenda se abriu.', minLevel: 1, bands: [
     { min: 1, max: 5, monster: 'larva-de-ferrugem', boss: 'larva-mae' },
@@ -128,7 +128,7 @@ export const RIFTS: RiftDef[] = [
     { min: 21, max: 25, monster: 'espinheiro-vivo', boss: 'raiz-ancia' },
     { min: 26, max: 30, monster: 'cervo-espectral', boss: 'rei-galhado' },
   ] },
-  { id: 'cidadela-afundada', name: 'Cidadela Afundada', desc: 'Fortaleza engolida pela maré, ainda guardada.', minLevel: 31, bands: [
+  { id: 'cidadela-afundada', name: 'Cidadela Afundada', desc: 'Fortaleza engolida pela maré, ainda guardada.', minLevel: 31, wall: [300, 310, 320], bands: [
     { min: 31, max: 35, monster: 'sentinela-afogada', boss: 'capitao-das-mares' },
     { min: 36, max: 40, monster: 'sacerdote-do-lodo', boss: 'hierofante-do-lodo' },
     { min: 41, max: 45, monster: 'armadura-vazia', boss: 'guardiao-do-selo' },

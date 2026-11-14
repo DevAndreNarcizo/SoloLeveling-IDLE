@@ -12,6 +12,8 @@ export interface HuntOptions {
   mode: 'hunt' | 'promotion' | 'duel'
   monster: string; boss: string
   minLevel: number; maxLevel: number
+  /** Largura das paredes do mapa: [lados, topo, base]. Padrão: 160/140/140. */
+  wall?: [number, number, number]
   seconds?: number // limite do teste de promoção e do duelo
   rng?: () => number
   now?: () => number
@@ -123,7 +125,9 @@ export class Hunt {
     if (k === 'chefe' && this.members.length > 1) s.maxHp = Math.round(s.maxHp * (1 + 0.6 * (this.members.length - 1)))
     let px = x, py = y
     for (let tries = 0; px === undefined || py === undefined; tries++) {
-      const cx = EDGE_X + this.rng() * (this.w - 2 * EDGE_X), cy = EDGE_Y + this.rng() * (this.h - 2 * EDGE_Y)
+      const [wx, wt, wb] = this.opt.wall ?? [WALL_X, WALL_Y, WALL_Y]
+      const ex = wx + EDGE_X - WALL_X, et = wt + EDGE_Y - WALL_Y, eb = wb + EDGE_Y - WALL_Y
+      const cx = ex + this.rng() * (this.w - 2 * ex), cy = et + this.rng() * (this.h - et - eb)
       if (tries > 20 || this.members.every((m) => dist({ x: cx, y: cy }, m.actor) > 260)) { px = cx; py = cy }
     }
     this.mobs.push({
@@ -150,8 +154,9 @@ export class Hunt {
     const d = Math.hypot(tx - a.x, ty - a.y)
     if (d < 1) return
     const step = Math.min(d, a.speed * dt)
-    a.x = Math.min(this.w - WALL_X, Math.max(WALL_X, a.x + ((tx - a.x) / d) * step))
-    a.y = Math.min(this.h - WALL_Y, Math.max(WALL_Y, a.y + ((ty - a.y) / d) * step))
+    const [wx, wt, wb] = this.opt.wall ?? [WALL_X, WALL_Y, WALL_Y]
+    a.x = Math.min(this.w - wx, Math.max(wx, a.x + ((tx - a.x) / d) * step))
+    a.y = Math.min(this.h - wb, Math.max(wt, a.y + ((ty - a.y) / d) * step))
   }
   private nearest(from: { x: number; y: number }, list: Actor[]): Actor | undefined {
     let best: Actor | undefined, bd = Infinity

@@ -375,7 +375,7 @@ export class World {
       group = s.party.members.map((id) => this.sessions.get(id)).filter((o): o is Session => !!o && !o.hunt && !o.trade && o.char!.level >= found.band.min)
       if (!group.includes(s)) return this.err(s, 'Volte à cidade para abrir a caçada.')
     } else if (s.hunt) { if (s.hunt.members.length > 1) this.dropFromHunt(s, s.hunt) }
-    const hunt = new Hunt(group.map((o) => this.memberInit(o)), { mode: 'hunt', monster: found.band.monster, boss: found.band.boss, minLevel: found.band.min, maxLevel: found.band.max, rng: this.rng, now: this.now })
+    const hunt = new Hunt(group.map((o) => this.memberInit(o)), { mode: 'hunt', monster: found.band.monster, boss: found.band.boss, minLevel: found.band.min, maxLevel: found.band.max, wall: found.rift.wall, rng: this.rng, now: this.now })
     const room: RoomInfo = { kind: 'hunt', w: HUNT_MAP.w, h: HUNT_MAP.h, map: found.rift.id, title: `${found.rift.name} · nv ${found.band.min}–${found.band.max}${group.length > 1 ? ` · grupo de ${group.length}` : ''}`, rift: found.rift.id, band: Number(bandIndex), level: hunt.mobLevel }
     for (const o of group) { o.hunt = hunt; o.send({ t: 'room', room, you: hunt.memberId(o.accountId) }) }
   }
