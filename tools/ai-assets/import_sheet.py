@@ -22,7 +22,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ANIMATED = os.path.join(ROOT, "shared/animated.json")
 
-def remove_background(img, mist=False, fire=False):
+def remove_background(img, mist=False, fire=False, key=110):
     """Fundo transparente ou magenta -> alfa. Também limpa o halo magenta nas bordas."""
     a = np.array(img.convert("RGBA")).astype(int)
     if (a[:, :, 3] < 10).mean() > 0.2:      # já veio transparente
@@ -32,7 +32,7 @@ def remove_background(img, mist=False, fire=False):
         h, w = a.shape[:2]
         bg = np.median(np.array([a[2, 2, :3], a[2, w - 3, :3], a[h - 3, 2, :3], a[h - 3, w - 3, :3]]), axis=0)
         dist = np.sqrt(((a[:, :, :3] - bg) ** 2).sum(axis=2))
-        alpha = dist > 110
+        alpha = dist > key
     out = a.copy(); out[:, :, 3] = np.where(alpha, 255, 0)
     # Halo: nos 3 px junto ao fundo, tira o excesso de vermelho+azul que o magenta deixou misturado na cor
     edge = alpha.copy()
@@ -92,9 +92,10 @@ def main():
     ap.add_argument("--fire", action="store_true", help="limpa a borda rosada de chamas (não use em personagens com roxo, rosa ou violeta)")
     ap.add_argument("--float", action="store_true", help="criatura que voa ou flutua: alinha os quadros pelo centro do corpo, não pelos pés")
     ap.add_argument("--attack", action="store_true", help="folha de ATAQUE (preparar, golpear, acertar, recolher): salva em <id>-ataque.png, na mesma escala da folha de caminhada")
+    ap.add_argument("--key", type=int, default=110, help="tolerância do recorte do fundo (padrão 110). Diminua (ex.: 70) se roxo ou rosa do personagem estiver sumindo")
     ap.add_argument("--keep-specks", action="store_true", help="mantém partículas soltas (cinzas, faíscas) em vez de apagá-las")
     args = ap.parse_args()
-    a = remove_background(Image.open(args.image), args.mist, args.fire)
+    a = remove_background(Image.open(args.image), args.mist, args.fire, args.key)
     H, W = a.shape[:2]; cw, ch = W / 4, H / 4
     frames = []
     for i in range(16):
