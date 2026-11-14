@@ -3,6 +3,7 @@
 Uso:  python tools/ai-assets/import_sheet.py <imagem.png> <id do asset> [--height N]
       ex.: python tools/ai-assets/import_sheet.py ~/Downloads/lamina.png cacadores/lamina
       quadro defeituoso: --replace 15=13m  (o 15º passa a ser o 13º espelhado)
+      névoa ou fumaça rosada: --mist   |   manter partículas soltas: --keep-specks
 
 A imagem deve ter 4 colunas x 4 linhas (linhas: baixo, esquerda, direita, cima; 4 quadros de caminhada cada),
 com fundo transparente ou magenta liso (#FF00FF). O script:
@@ -19,7 +20,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ANIMATED = os.path.join(ROOT, "shared/animated.json")
 
-def remove_background(img):
+def remove_background(img, mist=False):
     """Fundo transparente ou magenta -> alfa. Também limpa o halo magenta nas bordas."""
     a = np.array(img.convert("RGBA")).astype(int)
     if (a[:, :, 3] < 10).mean() > 0.2:      # já veio transparente
@@ -40,8 +41,28 @@ def remove_background(img):
     cap = g + (np.abs(r - b) // 2) + 24
     band &= (np.abs(r - b) < 45) & (np.minimum(r, b) > g + 40)   # só tons magenta; violeta (azul bem maior) fica intacto
     out[:, :, 0] = np.where(band, np.minimum(r, cap), r); out[:, :, 2] = np.where(band, np.minimum(b, cap), b)
+    if mist:
+        # Névoa e fumaça semitransparentes vêm misturadas com o magenta em toda a área, não só na borda: viram cinza-claro
+        r, g, b = out[:, :, 0].copy(), out[:, :, 1], out[:, :, 2].copy()
+        pink = alpha & (np.abs(r - b) < 60) & (np.minimum(r, b) > g + 10)
+        out[:, :, 0] = np.where(pink, g + 4, r); out[:, :, 2] = np.where(pink, g + 8, b)
     out[:, :, :3] = np.where(alpha[:, :, None], out[:, :, :3], 0)
     return out.astype(np.uint8)
+
+def drop_specks(cell):
+    """Apaga respingos soltos: fica só a maior faixa contínua de linhas e de colunas com pixels."""
+    for axis in (1, 0):
+        used = (cell[:, :, 3] > 0).any(axis=axis)
+        best, start = (0, 0, 0), None
+        for i, u in enumerate(list(used) + [False]):
+            if u and start is None: start = i
+            elif not u and start is not None:
+                mass = int((cell[start:i, :, 3] > 0).sum() if axis == 1 else (cell[:, start:i, 3] > 0).sum())
+                if mass > best[0]: best = (mass, start, i)
+                start = None
+        if axis == 1: cell[:best[1]] = 0; cell[best[2]:] = 0
+        else: cell[:, :best[1]] = 0; cell[:, best[2]:] = 0
+    return cell
 
 def shrink(arr, w, h):
     """Reduz por mediana de cada bloco: mantém as cores originais e as bordas nítidas (média borra, paleta perde detalhe)."""
@@ -60,13 +81,16 @@ def main():
     ap.add_argument("--height", type=int, default=0, help="altura do personagem em pixels (padrão: 54; chefes, 86)")
     ap.add_argument("--replace", action="append", default=[], metavar="DESTINO=ORIGEM[m]",
                     help="troca um quadro defeituoso por outro (1 a 16, lendo linha a linha); m = espelhado. Ex.: --replace 15=13m")
+    ap.add_argument("--mist", action="store_true", help="limpa o tom rosado de névoa/fumaça semitransparente (não use em personagens com magenta ou rosa)")
+    ap.add_argument("--keep-specks", action="store_true", help="mantém partículas soltas (cinzas, faíscas) em vez de apagá-las")
     args = ap.parse_args()
-    a = remove_background(Image.open(args.image))
+    a = remove_background(Image.open(args.image), args.mist)
     H, W = a.shape[:2]; cw, ch = W / 4, H / 4
     frames = []
     for i in range(16):
         x0, y0 = int(round((i % 4) * cw)), int(round((i // 4) * ch))
         cell = a[y0:int(round(y0 + ch)), x0:int(round(x0 + cw))].copy()
+        if not args.keep_specks: cell = drop_specks(cell)
         ys, xs = np.nonzero(cell[:, :, 3])
         if len(ys) == 0: raise SystemExit(f"quadro {i + 1} vazio: confira se a grade é 4x4")
         top, bottom, left, right = ys.min(), ys.max(), xs.min(), xs.max()
