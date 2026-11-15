@@ -1,7 +1,7 @@
 """Retoques pontuais em sprites já importados, para defeitos da imagem gerada que não valem uma nova geração.
 Rode depois de reimportar o asset correspondente:  python tools/ai-assets/fixes.py
 Cada retoque é idempotente (rodar duas vezes não estraga)."""
-import os
+import os, sys
 import numpy as np
 from PIL import Image
 
@@ -33,6 +33,20 @@ def mercador_pele_quente():
     a[:, :, 0] = np.where(skin, np.clip(214 * k, 0, 255), r); a[:, :, 1] = np.where(skin, np.clip(160 * k, 0, 255), g); a[:, :, 2] = np.where(skin, np.clip(124 * k, 0, 255), b)
     Image.fromarray(a.astype(np.uint8)).save(p); return n
 
+def match_colors(target_id, ref_id):
+    """Folha de ataque com tom diferente da de caminhada: aproxima as cores da pedra/metal às da caminhada
+    (média e desvio por canal), sem mexer no brilho laranja. Uso: python fixes.py cores <ataque> <caminhada>."""
+    def glow(a): r, g, b = a[..., 0], a[..., 1], a[..., 2]; return (r > 180) & (r - b > 90)
+    t = np.array(Image.open(os.path.join(ASSETS, target_id + ".png"))).astype(float)
+    ref = np.array(Image.open(os.path.join(ASSETS, ref_id + ".png"))).astype(float)
+    mt = (t[..., 3] > 0) & ~glow(t); mr = (ref[..., 3] > 0) & ~glow(ref)
+    for ch in range(3):
+        a, b = t[..., ch][mt], ref[..., ch][mr]
+        t[..., ch][mt] = np.clip((a - a.mean()) / (a.std() + 1e-6) * b.std() + b.mean(), 0, 255)
+    Image.fromarray(t.astype(np.uint8)).save(os.path.join(ASSETS, target_id + ".png")); return int(mt.sum())
+
+if __name__ == "__main__" and len(sys.argv) == 4 and sys.argv[1] == "cores":
+    print("pixels ajustados", match_colors(sys.argv[2], sys.argv[3])); sys.exit()
 if __name__ == "__main__":
     print("alfa-da-nevoa: pixels retocados", alfa_sem_olhos_na_nuca())
     print("mercador: pixels retocados", mercador_pele_quente())
