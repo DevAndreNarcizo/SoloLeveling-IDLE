@@ -57,6 +57,8 @@ export class GameScene extends Phaser.Scene {
   private lastSkill = new Map<number, { name: string; at: number }>()
   onNearNpc: (npc: (typeof NPCS)[number] | null) => void = () => {}
   private nearNpc: (typeof NPCS)[number] | null = null
+  /** NPCs da cidade na tela: para virar para o jogador, falar e mostrar emotes. */
+  private npcViews: { def: (typeof NPCS)[number]; img: Phaser.GameObjects.Sprite; top: number; nextEmote: number; bubble?: Phaser.GameObjects.GameObject[] }[] = []
 
   constructor() { super('game') }
 
@@ -113,7 +115,12 @@ export class GameScene extends Phaser.Scene {
 
   private typing() { const el = document.activeElement; return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement }
   interact() {
-    if (this.room?.kind === 'city') { if (this.nearNpc) this.game.events.emit('npc', this.nearNpc.panel) }
+    if (this.room?.kind === 'city') {
+      if (!this.nearNpc) return
+      const v = this.npcViews.find((o) => o.def === this.nearNpc)
+      if (v) this.hop(v.img)
+      this.game.events.emit('npc', this.nearNpc.panel)
+    }
     else if (this.room?.kind === 'hunt') send({ t: 'extract' })
   }
 
@@ -168,7 +175,7 @@ export class GameScene extends Phaser.Scene {
 
   // ---------- Sala ----------
   private enterRoom(room: RoomInfo, you: number) {
-    this.room = room; this.you = you; this.dest = null; this.lastMove = '0,0'; this.roomSnaps = 0
+    this.room = room; this.you = you; this.dest = null; this.lastMove = '0,0'; this.roomSnaps = 0; this.npcViews = []
     for (const v of this.views.values()) v.box.destroy()
     this.views.clear()
     for (const d of this.decor) d.destroy()
@@ -185,11 +192,19 @@ export class GameScene extends Phaser.Scene {
     if (room.kind === 'city') {
       for (const n of NPCS) {
         const key = `npcs/${n.id}`
-        const img = this.add.image(n.x, n.y, key).setScale(scaleFor(key)).setOrigin(0.5, 1).setDepth(n.y)
-        this.decor.push(this.shadow(n.x, n.y - 2, img.displayWidth * 0.75, 12).setDepth(n.y - 1), img)
-        // Respiração: sobe e desce um pixel, em passos (sem borrar o pixel art), cada NPC no seu ritmo.
-        this.tweens.add({ targets: img, y: n.y - 1, duration: 900 + (n.x % 7) * 60, yoyo: true, repeat: -1, ease: 'Stepped' })
-        this.decor.push(this.add.text(n.x, n.y - img.displayHeight - 10, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
+        // Com folha de animação parada (npc-<id>), o NPC respira, pisca e gesticula; sem ela, só respira.
+        const idle = `npc-${n.id}`
+        const img = hasFx(idle)
+          ? this.add.sprite(n.x, n.y, fxKey(idle), 0).setOrigin(0.5, 1).setDepth(n.y)
+          : this.add.sprite(n.x, n.y, key).setScale(scaleFor(key)).setOrigin(0.5, 1).setDepth(n.y)
+        if (hasFx(idle)) {
+          const ak = `anim:${idle}`
+          if (!this.anims.exists(ak)) this.anims.create({ key: ak, frames: this.anims.generateFrameNumbers(fxKey(idle), {}), frameRate: 5, repeat: -1, repeatDelay: 600 })
+          img.play({ key: ak, startFrame: n.x % 6, delay: (n.y % 7) * 200 })
+        } else this.tweens.add({ targets: img, y: n.y - 1, duration: 900 + (n.x % 7) * 60, yoyo: true, repeat: -1, ease: 'Stepped' })
+        const label = this.add.text(n.x, n.y - img.displayHeight - 10, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000)
+        this.decor.push(this.shadow(n.x, n.y - 2, img.displayWidth * 0.75, 12).setDepth(n.y - 1), img, label)
+        this.npcViews.push({ def: n, img, top: n.y - img.displayHeight, nextEmote: this.time.now + 3000 + Math.random() * 9000 })
         if (n.panel === 'fendas') this.decor.push(...this.fx.portal(n.x + 92, n.y - 2))
       }
     }
@@ -288,6 +303,48 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: t, scale: 1, duration: 110, ease: 'Back.easeOut' })
     this.tweens.add({ targets: t, y: y - 38, alpha: 0, delay: life * 0.25, duration: life * 0.75, ease: 'Quad.easeIn', onComplete: () => t.destroy() })
   }
+  // ---------- Vida dos NPCs ----------
+  /** Pulinho de quem foi chamado. */
+  private hop(img: Phaser.GameObjects.Sprite) {
+    if (this.tweens.isTweening(img)) return
+    const y = img.y
+    this.tweens.add({ targets: img, y: y - 6, duration: 90, yoyo: true, ease: 'Quad.easeOut', onComplete: () => img.setY(y) })
+  }
+  /** Balão de fala sobre o NPC (some sozinho). */
+  private say(v: (typeof this.npcViews)[number], text: string) {
+    for (const o of v.bubble ?? []) o.destroy()
+    const y = v.top - 30
+    const t = this.add.text(v.def.x, y, text, { fontSize: '12px', color: '#1b1630', fontStyle: 'bold', wordWrap: { width: 190 }, align: 'center' }).setOrigin(0.5, 1).setDepth(9500)
+    const bg = hasFx('balao')
+      ? this.add.image(v.def.x, y + 6, fxKey('balao')).setOrigin(0.5, 1).setDisplaySize(t.width + 26, t.height + 22).setDepth(9499)
+      : this.add.text(v.def.x, y, text, { fontSize: '12px', color: '#f4f0ff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, wordWrap: { width: 190 }, align: 'center' }).setOrigin(0.5, 1).setDepth(9501)
+    if (!hasFx('balao')) t.setVisible(false)
+    v.bubble = [bg, t]
+    for (const o of v.bubble) { (o as Phaser.GameObjects.Image).setAlpha(0); this.tweens.add({ targets: o, alpha: 1, duration: 160 }) }
+    this.time.delayedCall(3200, () => { for (const o of v.bubble === undefined ? [] : [bg, t]) if (o.active) this.tweens.add({ targets: o, alpha: 0, duration: 250, onComplete: () => o.destroy() }) })
+  }
+  /** Emote rápido sobre a cabeça (sprite; sem ele, um sinal em texto). */
+  private emote(v: (typeof this.npcViews)[number], id: string, glyph: string) {
+    const y = v.top - 8
+    const o = hasFx(id) ? this.add.image(v.def.x + 18, y, fxKey(id)).setDisplaySize(26, 26) : this.add.text(v.def.x + 18, y, glyph, { fontSize: '18px', color: '#ffcf5c', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5)
+    o.setDepth(9400).setScale(o.scaleX * 0.3, o.scaleY * 0.3)
+    const sx = o.scaleX / 0.3
+    this.tweens.add({ targets: o, scale: sx, y: y - 10, duration: 220, ease: 'Back.easeOut' })
+    this.tweens.add({ targets: o, alpha: 0, delay: 1500, duration: 300, onComplete: () => o.destroy() })
+  }
+  /** Vira para o jogador quando ele chega perto e, de vez em quando, solta um emote sozinho. */
+  private npcLife(me: View | undefined) {
+    const now = this.time.now
+    for (const v of this.npcViews) {
+      if (me) { const dx = me.box.x - v.def.x; if (Math.abs(dx) > 8 && Math.hypot(dx, me.box.y - v.def.y) < 260) v.img.setFlipX(dx < 0) }
+      if (now > v.nextEmote) {
+        v.nextEmote = now + 9000 + Math.random() * 14000
+        const pick = [['emote-reticencias', '…'], ['emote-nota', '♪'], ['emote-coracao', '♥'], ['emote-interrogacao', '?']][Math.floor(Math.random() * 4)]
+        this.emote(v, pick[0], pick[1])
+      }
+    }
+  }
+
   /** Sombra no chão (sprite), esticada para a largura de quem a projeta. */
   private shadow(x: number, y: number, w: number, h: number): Phaser.GameObjects.Image | Phaser.GameObjects.Ellipse {
     return hasFx('sombra') ? this.add.image(x, y, fxKey('sombra')).setDisplaySize(w, h) : this.add.ellipse(x, y, w, h * 0.8, 0x000000, 0.38)
@@ -394,7 +451,12 @@ export class GameScene extends Phaser.Scene {
       const key = `${dx.toFixed(2)},${dy.toFixed(2)}`
       if (key !== this.lastMove) { this.lastMove = key; send({ t: 'move', dx, dy }) }
       const near = me ? NPCS.find((n) => Math.hypot(n.x - me.box.x, n.y - me.box.y) < 80) ?? null : null
-      if (near !== this.nearNpc) { this.nearNpc = near; this.onNearNpc(near) }
+      if (near !== this.nearNpc) {
+        this.nearNpc = near; this.onNearNpc(near)
+        const v = near && this.npcViews.find((o) => o.def === near)
+        if (v) { this.say(v, near!.lines[Math.floor(Math.random() * near!.lines.length)]); this.emote(v, 'emote-exclamacao', '!') }
+      }
+      this.npcLife(me)
     } else if (this.nearNpc) { this.nearNpc = null; this.onNearNpc(null) }
 
     const frame = Math.floor(this.time.now / 140) % 4

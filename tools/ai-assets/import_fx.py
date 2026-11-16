@@ -135,7 +135,9 @@ def main():
         try:
             if it["kind"] == "npc": do_npc(it, src); continue
             side = 0
-            if it["kind"] in ("walk", "loop"): img, frames, side = do_solid_sheet(it, src)
+            if it["kind"] == "npc-idle":   # mesma altura do sprite parado que já está no jogo
+                it = dict(it, size=Image.open(it["ref"]).height - 4)
+            if it["kind"] in ("walk", "loop", "npc-idle"): img, frames, side = do_solid_sheet(it, src)
             elif it["kind"] == "sheet": img, frames = do_sheet(it, src)
             else: img, frames = do_single(it, src)
         except ValueError as e: print("ERRO", it["id"], e); continue

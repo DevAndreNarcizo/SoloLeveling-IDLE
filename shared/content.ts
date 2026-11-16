@@ -146,18 +146,18 @@ export const HUNT_MAP = { w: 1920, h: 1280 }
 export const CITY_MAP = { w: 1920, h: 1280 }
 export const CITY_NAME = 'Vértice'
 
-export interface NpcDef { id: string; name: string; role: string; panel: string; x: number; y: number }
+export interface NpcDef { id: string; name: string; role: string; panel: string; x: number; y: number; lines: string[] }
 // Posições casadas com as quatro praças redondas das diagonais do mapa da cidade (mapas/cidade.png).
 export const NPCS: NpcDef[] = [
-  { id: 'guardia-das-fendas', name: 'Ísis, Guardiã das Fendas', role: 'Abre as caçadas', panel: 'fendas', x: 435, y: 400 },
-  { id: 'mercador', name: 'Tobias, o Mercador', role: 'Vende consumíveis', panel: 'loja', x: 435, y: 935 },
-  { id: 'ferreira', name: 'Dária, a Ferreira', role: 'Aprimora equipamentos', panel: 'forja', x: 1485, y: 400 },
-  { id: 'arquivista', name: 'Noé, o Arquivista', role: 'Mostra o ranking', panel: 'ranking', x: 1485, y: 935 },
+  { id: 'guardia-das-fendas', name: 'Ísis, Guardiã das Fendas', role: 'Abre as caçadas', panel: 'fendas', x: 435, y: 400, lines: ['A fenda está instável hoje. Prepare-se.', 'Escolha bem a faixa de nível, caçador.', 'Volte inteiro, por favor.'] },
+  { id: 'mercador', name: 'Tobias, o Mercador', role: 'Vende consumíveis', panel: 'loja', x: 435, y: 935, lines: ['Poções fresquinhas! Quase não explodem.', 'Ei, você! Tem ouro? Eu tenho coisas.', 'Preço justo, palavra de mercador.'] },
+  { id: 'ferreira', name: 'Dária, a Ferreira', role: 'Aprimora equipamentos', panel: 'forja', x: 1485, y: 400, lines: ['Traz esse ferro aqui que eu dou um jeito.', 'Lâmina cega não corta sombra.', 'A forja está quente. Vai aprimorar?'] },
+  { id: 'arquivista', name: 'Noé, o Arquivista', role: 'Mostra o ranking', panel: 'ranking', x: 1485, y: 935, lines: ['Cada caçada fica registrada nestes livros.', 'Quer ver quem está no topo?', 'Silêncio... estou anotando.'] },
   // Cruzamentos dos caminhos e pontas da avenida central.
-  { id: 'mestre-de-talentos', name: 'Ezequiel, Mestre de Talentos', role: 'Distribui talentos', panel: 'talentos', x: 435, y: 660 },
-  { id: 'joalheira', name: 'Lia, a Joalheira', role: 'Loja de cristais', panel: 'cristais', x: 1485, y: 660 },
-  { id: 'mestre-da-guilda', name: 'Bruno, Mestre da Guilda', role: 'Cuida das guildas', panel: 'guilda', x: 900, y: 335 },
-  { id: 'leiloeira', name: 'Helena, a Leiloeira', role: 'Abre o mercado', panel: 'mercado', x: 1020, y: 1020 },
+  { id: 'mestre-de-talentos', name: 'Ezequiel, Mestre de Talentos', role: 'Distribui talentos', panel: 'talentos', x: 435, y: 660, lines: ['Todo poder começa por uma escolha.', 'Seus talentos ainda dormem, jovem.', 'Medite antes de gastar seus pontos.'] },
+  { id: 'joalheira', name: 'Lia, a Joalheira', role: 'Loja de cristais', panel: 'cristais', x: 1485, y: 660, lines: ['Olha só o brilho deste cristal!', 'Cristais de fenda, lapidados por mim.', 'Cuidado, esse aqui morde.'] },
+  { id: 'mestre-da-guilda', name: 'Bruno, Mestre da Guilda', role: 'Cuida das guildas', panel: 'guilda', x: 900, y: 335, lines: ['Sozinho você vai longe. Em guilda, mais longe.', 'Procurando companheiros de caça?', 'Já vi muitos caçadores caírem. Não seja um.'] },
+  { id: 'leiloeira', name: 'Helena, a Leiloeira', role: 'Abre o mercado', panel: 'mercado', x: 1020, y: 1020, lines: ['Dou-lhe uma, dou-lhe duas...', 'O mercado está agitado hoje!', 'Tem algo para vender? Eu cuido do resto.'] },
 ]
 
 // ---------- Progressão ----------

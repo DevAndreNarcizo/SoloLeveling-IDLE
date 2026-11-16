@@ -45,6 +45,16 @@ SOLID_SHEET = ("16-bit pixel art sprite sheet for a top-down 2D RPG, in the styl
 WALK = ("Frames: a side-view walk cycle facing RIGHT, the whole body seen from the side, legs clearly alternating, "
         "every frame facing right")
 
+NPC_IDLE = ("Use the input image as the exact reference for the character: same face, hair, clothes, colors, proportions, "
+            "outline and shading. Draw the SAME character facing the camera in a 6-frame idle animation: frame 1 neutral pose, "
+            "frame 2 breathing in with shoulders slightly raised, frame 3 eyes closed in a blink, frame 4 neutral pose, "
+            "frame 5 a small friendly gesture ({gesture}), frame 6 back to neutral")
+
+def npc_idle(i, gesture):
+    ref = os.path.join(ROOT, "client/public/assets/npcs", i + ".png")
+    return {"id": "npc-" + i, "group": "npcs-animados", "kind": "npc-idle", "ref": ref, "size": 0,
+            "prompt": SOLID_SHEET.format(subject="The subject: the character from the input image", frames=NPC_IDLE.format(gesture=gesture))}
+
 def walker(i, group, subject, size):
     return {"id": i, "group": group, "kind": "walk", "size": size, "prompt": SOLID_SHEET.format(subject="The subject: " + subject, frames=WALK)}
 
@@ -136,6 +146,22 @@ ITEMS = [
     prop("bau", "objetos", "a closed wooden treasure chest with dark iron bands and a golden lock", "6 identical frames of the chest, completely still", 48),
     prop("quadro-de-avisos", "objetos", "a wooden notice board on two posts with pinned paper notes", "6 identical frames of the board, completely still", 72),
     prop("lampiao", "objetos", "an iron street lamp post with a glass lantern glowing warm yellow on top", "6 frames of the lantern light flickering softly in a seamless loop; the post never changes", 96),
+    # ---------- Emotes e balão de fala dos NPCs ----------
+    one("emote-exclamacao", "emotes", "a bold yellow exclamation mark inside a small white round speech bubble", 32, solid=True),
+    one("emote-interrogacao", "emotes", "a bold cyan question mark inside a small white round speech bubble", 32, solid=True),
+    one("emote-reticencias", "emotes", "three grey dots inside a small white round speech bubble", 32, solid=True),
+    one("emote-nota", "emotes", "a violet music note inside a small white round speech bubble", 32, solid=True),
+    one("emote-coracao", "emotes", "a small red heart inside a small white round speech bubble", 32, solid=True),
+    one("balao", "emotes", "an empty wide white speech bubble with a dark outline and a small tail pointing down at the bottom center, nothing inside", 96, solid=True),
+    # ---------- Animação parada dos NPCs da cidade (usa o sprite atual como referência) ----------
+    npc_idle("guardia-das-fendas", "glancing down at her glowing tablet"),
+    npc_idle("mercador", "waving one hand"),
+    npc_idle("ferreira", "lifting the hammer slightly on her shoulder"),
+    npc_idle("arquivista", "turning a page of his book"),
+    npc_idle("mestre-da-guilda", "nodding with arms still crossed"),
+    npc_idle("leiloeira", "tapping the gavel on the ledger"),
+    npc_idle("mestre-de-talentos", "the floating tome glowing brighter"),
+    npc_idle("joalheira", "raising the crystal to look at it"),
     # NPCs com função: gerados no PixelLab (arte/pixellab/npcs/); a função npc() fica para gerar outros aqui.
     {"id": "fundo-login", "group": "interface", "kind": "wide", "size": 0,
      "prompt": "16-bit pixel art wide game title screen background: a lone hooded hunter seen from behind standing before a huge glowing violet rift in the middle of a dark night city plaza, shadows of creatures rising from the ground around, dark fantasy, detailed, crisp pixels, no text"},
@@ -159,9 +185,20 @@ def call(cmd):
     except json.JSONDecodeError: return {"success": False, "errors": [out[:300]]}
 
 def generate(acc, it):
-    if it["kind"] in ("sheet", "wide", "walk", "loop"):
+    if it["kind"] in ("sheet", "wide", "walk", "loop", "npc-idle"):
         url = f"{API}/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-2-klein-4b"
-        return call(["curl", "-sS", "-m", "240", "-X", "POST", url, "-F", "prompt=" + it["prompt"], "-F", "width=1536", "-F", "height=1024"])
+        cmd = ["curl", "-sS", "-m", "240", "-X", "POST", url, "-F", "prompt=" + it["prompt"], "-F", "width=1536", "-F", "height=1024"]
+        if it.get("ref"):
+            # Referência: o sprite atual do NPC, ampliado sobre magenta (o modelo lê melhor uma imagem grande).
+            from PIL import Image
+            ref = os.path.join(OUT, "_ref.png"); os.makedirs(OUT, exist_ok=True)
+            im = Image.open(it["ref"]).convert("RGBA"); k = 512 // im.height
+            bg = Image.new("RGBA", (im.width * k + 64, im.height * k + 64), (255, 0, 255, 255))
+            bg.alpha_composite(im.resize((im.width * k, im.height * k), Image.NEAREST), (32, 32)); bg.convert("RGB").save(ref)
+            r = call(cmd + ["-F", "input_image_0=@" + ref])
+            if r.get("result", {}) and r["result"].get("image"): return r
+            print("  referência recusada, tentando sem:", r.get("errors"))
+        return call(cmd)
     url = f"{API}/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-1-schnell"
     return call(["curl", "-sS", "-m", "240", "-X", "POST", url, "-H", "Content-Type: application/json",
                  "-d", json.dumps({"prompt": it["prompt"], "steps": 8})])

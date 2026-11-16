@@ -6,3 +6,4 @@ data/
 __pycache__/
 tools/ai-assets/.cloudflare_account
 arte/pacotes/
+arte/cloudflare/_ref.png
