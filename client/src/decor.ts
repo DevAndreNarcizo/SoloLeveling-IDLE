@@ -32,6 +32,9 @@ const WALKERS: Record<string, [string, number, number][]> = {
   'forja-extinta': [['salamandra', 3, 34]],
 }
 
+/** Objetos que emitem luz própria: não escurecem com a luz do mapa. */
+const GLOWS = new Set(['tocha', 'fogueira', 'cristal-de-fenda', 'lampiao', 'caldeirao'])
+
 interface Walker { img: Phaser.GameObjects.Image; speed: number; tx: number; ty: number; wait: number; frames: number }
 
 export class Decor {
@@ -40,7 +43,7 @@ export class Decor {
   constructor(private scene: Phaser.Scene) {}
 
   /** Monta o cenário da sala. Devolve os objetos criados para a cena destruir ao trocar de sala. */
-  build(map: string, kind: string, w: number, h: number): Phaser.GameObjects.GameObject[] {
+  build(map: string, kind: string, w: number, h: number, light = 0xffffff): Phaser.GameObjects.GameObject[] {
     this.walkers = []
     const out: Phaser.GameObjects.GameObject[] = []
     // Área por onde os figurantes andam: a mesma área livre dos caçadores.
@@ -49,6 +52,7 @@ export class Decor {
     for (const [id, x, y] of OBJECTS[map] ?? []) {
       if (!hasFx(id)) continue
       const r = REG[id], img = this.scene.add.sprite(x, y, fxKey(id), 0).setOrigin(0.5, 1).setDepth(y)
+      if (!GLOWS.has(id)) img.setTint(light)
       if (r.frames > 1) img.play({ key: this.anim(id, 8), startFrame: Math.floor(Math.random() * r.frames) })
       out.push(img)
     }
@@ -58,7 +62,7 @@ export class Decor {
       for (let i = 0; i < n; i++) {
         const p = this.area.getRandomPoint()
         const img = this.scene.add.image(p.x, p.y, fxKey(id), 0).setOrigin(0.5, 1).setDepth(p.y)
-        if (kind !== 'city') img.setAlpha(0.9)
+        img.setTint(light)
         this.walkers.push({ img, speed, tx: p.x, ty: p.y, wait: Math.random() * 3, frames: REG[id].frames })
         out.push(img)
       }

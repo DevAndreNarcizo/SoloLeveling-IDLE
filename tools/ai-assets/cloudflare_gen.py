@@ -146,6 +146,15 @@ ITEMS = [
     prop("bau", "objetos", "a closed wooden treasure chest with dark iron bands and a golden lock", "6 identical frames of the chest, completely still", 48),
     prop("quadro-de-avisos", "objetos", "a wooden notice board on two posts with pinned paper notes", "6 identical frames of the board, completely still", 72),
     prop("lampiao", "objetos", "an iron street lamp post with a glass lantern glowing warm yellow on top", "6 frames of the lantern light flickering softly in a seamless loop; the post never changes", 96),
+    # ---------- Postos de trabalho dos NPCs (ficam atrás deles na cidade) ----------
+    one("banca-mercador", "postos", "a small wooden market stall cart with a striped violet awning, shelves full of colorful potion bottles and pouches, seen from the front and slightly above", 96, solid=True),
+    one("bigorna", "postos", "a heavy black iron blacksmith anvil on a tree stump with a hammer and tongs resting on it, seen from the front and slightly above", 64, solid=True),
+    one("estante-livros", "postos", "a tall wooden bookshelf packed with old books and scrolls, with a lit candle on top, seen from the front", 96, solid=True),
+    one("balcao-joias", "postos", "a small wooden jeweler counter with a glass case of glowing cyan and violet crystals and gems, seen from the front and slightly above", 80, solid=True),
+    one("pulpito-leilao", "postos", "a small dark wooden auction podium lectern with a brass bell and an open ledger on top, seen from the front", 72, solid=True),
+    one("pedestal-runico", "postos", "a short stone pedestal carved with glowing cyan runes, with a floating glowing orb above it, seen from the front", 64, solid=True),
+    one("mesa-guilda", "postos", "a sturdy wooden table covered with maps, a dagger stuck in the wood and a small violet guild banner on a stand behind it, seen from the front and slightly above", 80, solid=True),
+    one("luz", "postos", "a soft round warm yellow light glow pool, fading to black at the edges", 64),
     # ---------- Emotes e balão de fala dos NPCs ----------
     one("emote-exclamacao", "emotes", "a bold yellow exclamation mark inside a small white round speech bubble", 32, solid=True),
     one("emote-interrogacao", "emotes", "a bold cyan question mark inside a small white round speech bubble", 32, solid=True),

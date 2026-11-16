@@ -16,9 +16,21 @@ const LEGACY = 1.5
 const scaleFor = (key: string) => (ANIMATED.has(key) ? 1 : LEGACY)
 // Folha de ataque: o golpe acerta ATK_HIT ms depois de começar; a animação toda dura ATK_TOTAL.
 const ATK_HIT = 110, ATK_TOTAL = 340
+const NPC_H = 84 // altura dos NPCs na tela
 const CELL = 64 // tamanho da célula dos marcadores gerados por código
 const hash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0 }
 // Criaturas que voam ou flutuam: ficam um pouco acima do chão e oscilam no ar.
+// Luz de cada mapa: multiplica a cor de personagens e objetos para eles ficarem na mesma iluminação do cenário
+// (a cidade é noite azulada, a forja é quente...). Efeitos de luz não recebem.
+const LIGHT: Record<string, number> = {
+  cidade: 0xa9a6d6, 'minas-ocas': 0xe0cdb8, 'bosque-cinzento': 0xbcc8c6, 'cidadela-afundada': 0xb8d2d6, 'forja-extinta': 0xf0c4a8, arena: 0xc4c0dc,
+}
+/** Posto de trabalho de cada NPC: [sprite, deslocamento x, deslocamento y, altura em px]. Fica atrás dele. */
+const STATIONS: Record<string, [string, number, number, number]> = {
+  mercador: ['banca-mercador', 0, -16, 92], ferreira: ['bigorna', 34, 4, 56], arquivista: ['estante-livros', 0, -18, 100],
+  joalheira: ['balcao-joias', 0, -14, 70], leiloeira: ['pulpito-leilao', 30, 2, 70], 'mestre-de-talentos': ['pedestal-runico', -34, 2, 64],
+  'mestre-da-guilda': ['mesa-guilda', 0, -14, 76],
+}
 const FLYERS = new Set(['morcego-de-cinza', 'asa-ancia', 'brasa-errante', 'coracao-de-fornalha'])
 const hsl = (h: number, s: number, l: number) => `hsl(${h % 360} ${s}% ${l}%)`
 const TILE_COLORS: Record<string, [string, string]> = {
@@ -52,6 +64,7 @@ export class GameScene extends Phaser.Scene {
   private snapN = 0
   private roomSnaps = 0
   private fx!: Effects
+  private light = 0xffffff
   private scenery!: Decor
   /** Última habilidade de cada ator: os acertos que vêm logo depois usam o sprite dela. */
   private lastSkill = new Map<number, { name: string; at: number }>()
@@ -175,6 +188,7 @@ export class GameScene extends Phaser.Scene {
 
   // ---------- Sala ----------
   private enterRoom(room: RoomInfo, you: number) {
+    this.light = LIGHT[room.map] ?? 0xffffff
     this.room = room; this.you = you; this.dest = null; this.lastMove = '0,0'; this.roomSnaps = 0; this.npcViews = []
     for (const v of this.views.values()) v.box.destroy()
     this.views.clear()
@@ -188,7 +202,7 @@ export class GameScene extends Phaser.Scene {
     this.scale.off('resize', this.fitCamera, this); this.scale.on('resize', this.fitCamera, this)
     this.cameras.main.setBackgroundColor('#07060d')
     this.decor.push(...this.fx.ambient(room.map, room.w, room.h))
-    this.decor.push(...this.scenery.build(room.map, room.kind, room.w, room.h))
+    this.decor.push(...this.scenery.build(room.map, room.kind, room.w, room.h, this.light))
     if (room.kind === 'city') {
       for (const n of NPCS) {
         const key = `npcs/${n.id}`
@@ -196,7 +210,17 @@ export class GameScene extends Phaser.Scene {
         const idle = `npc-${n.id}`
         const img = hasFx(idle)
           ? this.add.sprite(n.x, n.y, fxKey(idle), 0).setOrigin(0.5, 1).setDepth(n.y)
-          : this.add.sprite(n.x, n.y, key).setScale(scaleFor(key)).setOrigin(0.5, 1).setDepth(n.y)
+          : this.add.sprite(n.x, n.y, key).setOrigin(0.5, 1).setDepth(n.y)
+        // Todos os NPCs na mesma altura (os gerados em ferramentas diferentes vêm com tamanhos diferentes).
+        img.setScale(NPC_H / img.height).setTint(this.light)
+        const st = STATIONS[n.id]
+        if (st && hasFx(st[0])) {
+          const prop = this.add.image(n.x + st[1], n.y + st[2], fxKey(st[0])).setOrigin(0.5, 1).setTint(this.light)
+          prop.setScale(st[3] / prop.height).setDepth(n.y + st[2] - (st[2] < 0 ? 0 : 1))
+          this.decor.push(this.shadow(prop.x, prop.y - 2, prop.displayWidth * 0.9, 14).setDepth(prop.depth - 1), prop)
+        }
+        // Poça de luz quente no chão: o NPC fica "aceso" como as casas ao redor.
+        if (hasFx('luz')) this.decor.push(this.add.image(n.x, n.y - 10, fxKey('luz')).setDisplaySize(170, 90).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.35).setDepth(n.y - 3))
         if (hasFx(idle)) {
           const ak = `anim:${idle}`
           if (!this.anims.exists(ak)) this.anims.create({ key: ak, frames: this.anims.generateFrameNumbers(fxKey(idle), {}), frameRate: 5, repeat: -1, repeatDelay: 600 })
@@ -220,7 +244,7 @@ export class GameScene extends Phaser.Scene {
   private baseTint(v: View) {
     if (v.ent.k === 'e') v.sprite.setTint(0x8a6cff)
     else if (v.ent.k === 'p' && v.ent.sh) v.sprite.setTint(0x9fd8ff)
-    else v.sprite.clearTint()
+    else v.sprite.setTint(this.light)
   }
   /** Empurra o sprite e deixa voltar sozinho (investida, recuo, impacto). */
   private nudge(v: View, dx: number, dy: number, duration = 70) {
@@ -243,6 +267,7 @@ export class GameScene extends Phaser.Scene {
         // Sombra no chão: prende o personagem ao cenário. Quem voa tem sombra menor.
         if (e.k !== 'c') box.addAt(this.shadow(0, -2, Math.min(sprite.displayWidth, size) * (fly ? 0.45 : 0.7), fly ? 9 : 13).setAlpha(fly ? 0.6 : 1), 0)
         if (e.k === 'e') sprite.setTint(0x8a6cff).setAlpha(0.88)
+        else if (!key.startsWith('fx:')) sprite.setTint(this.light)
         if (e.n && e.k !== 'c') {
           const color = e.k === 'p' ? (e.me ? '#ffffff' : '#c9c3e6') : e.k === 'e' ? '#b79cff' : e.mk === 'chefe' ? '#ff6b7a' : e.mk === 'elite' ? '#ffcf5c' : '#d7d3e8'
           const label = e.k === 'p' && e.r ? `[${e.r}] ${e.g ? `<${e.g}> ` : ''}${e.n}` : e.n
