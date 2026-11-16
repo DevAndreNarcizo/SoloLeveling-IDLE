@@ -1,0 +1,19 @@
+# Publicação no Render (Blueprint). O serviço também pode ser criado pelo painel com os mesmos valores.
+services:
+  - type: web
+    name: umbral-idle
+    runtime: node
+    region: virginia
+    plan: free
+    branch: feat/busy-ritchie-ua5f9c
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: TRUST_PROXY
+        value: "1"
+      # Conexão do Supabase (Session pooler). Preencha no painel do Render; nunca no código.
+      - key: DATABASE_URL
+        sync: false

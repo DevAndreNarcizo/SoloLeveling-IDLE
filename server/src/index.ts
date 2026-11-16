@@ -51,7 +51,9 @@ export async function startServer(opt: ServerOptions = {}) {
   const validPass = (p: unknown): p is string => typeof p === 'string' && p.length >= 8 && p.length <= 72
 
   const api = async (req: IncomingMessage, res: ServerResponse, path: string) => {
-    const ip = req.socket.remoteAddress ?? '?'
+    // Atrás de um proxy (Render, Fly...) o IP real vem no cabeçalho; sem TRUST_PROXY, ele é ignorado (pode ser forjado).
+    const fwd = process.env.TRUST_PROXY ? String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() : ''
+    const ip = fwd || (req.socket.remoteAddress ?? '?')
     if (path !== 'logout' && limited(ip)) return json(res, 429, { error: 'Muitas tentativas. Aguarde um minuto.' })
     let body: Record<string, unknown>
     try { body = await readBody(req) } catch { return json(res, 400, { error: 'Requisição inválida.' }) }
@@ -99,6 +101,7 @@ export async function startServer(opt: ServerOptions = {}) {
       api(req, res, url.pathname.slice(5)).catch((e) => { console.error('erro na API', e); if (!res.headersSent) json(res, 500, { error: 'Erro no servidor.' }) })
       return
     }
+    if (url.pathname === '/health') return json(res, 200, { ok: true, online: world.sessions.size })
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end() }
     // Arquivos estáticos do cliente já compilado (npm run build).
     const rel = normalize(decodeURIComponent(url.pathname)).replace(/^([/\\]|\.\.)+/, '')
