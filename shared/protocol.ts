@@ -111,4 +111,4 @@ export type ServerMsg =
   | { t: 'trade'; trade: TradeView | null }
   | { t: 'guild'; guild: GuildView | null }
   | { t: 'market'; rows: MarketRow[]; mine: boolean }
-  | { t: 'order'; id: string; status: 'pending' | 'paid'; text: string }
+  | { t: 'order'; id: string; status: 'pending' | 'paid'; text: string; pix?: { code: string; qr: string } }

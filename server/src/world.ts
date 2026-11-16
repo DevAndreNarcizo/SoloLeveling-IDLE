@@ -860,9 +860,9 @@ export class World {
   }
   private async buyPack(s: Session, pack: unknown) {
     if (!this.payments || typeof pack !== 'string') return this.err(s, 'As compras ainda não estão habilitadas.')
-    const r = await this.payments.createOrder(s.accountId, pack)
+    const r = await this.payments.createOrder(s.accountId, pack, s.account.email ?? undefined)
     if ('error' in r) return this.err(s, r.error)
-    s.send({ t: 'order', id: r.id, status: r.status, text: r.text })
+    s.send({ t: 'order', id: r.id, status: r.status, text: r.text, ...(r.pix ? { pix: r.pix } : {}) })
   }
 
   // ---------- Laço do jogo ----------

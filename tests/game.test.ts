@@ -470,6 +470,31 @@ describe('servidor', () => {
     p.ws.close()
   })
 
+  it('pix: o aviso do provedor só credita depois de conferir o pagamento na fonte, uma vez só', async () => {
+    const p = await player('pix_t', 'Pagador', 'lamina', 'pix@exemplo.test')
+    const old = srv.payments.provider
+    let paid = false, created = ''
+    srv.payments.provider = {
+      name: 'fake',
+      async create(o) { created = o.id; return o.email ? { ref: '777', text: 'Pague o Pix.', pix: { code: '000201PIX', qr: '' } } : { error: 'sem e-mail' } },
+      async check(ref) { return ref === '777' ? { orderId: created, paid } : null },
+    }
+    try {
+      p.flush(); p.send({ t: 'buyPack', pack: 'p100' })
+      const o = await p.waitFor('order')
+      expect(o.status).toBe('pending'); expect(o.pix?.code).toBe('000201PIX')
+      const before = p.sess.account.crystals
+      // Aviso falso (pagamento ainda não aprovado na fonte): nada muda
+      expect(await srv.payments.notified('777')).toBe(false)
+      expect(await srv.payments.notified('999')).toBe(false)
+      paid = true
+      expect(await srv.payments.notified('777')).toBe(true)
+      expect(await srv.payments.notified('777')).toBe(false) // repetido não credita de novo
+      await new Promise((r) => setTimeout(r, 100))
+      expect(p.sess.account.crystals).toBe(before + 100)
+    } finally { srv.payments.provider = old; p.ws.close() }
+  })
+
   it('cristais: compra confirmada uma única vez e gasto na loja premium', async () => {
     const a = await player('prm_a', 'Quim')
     a.send({ t: 'premium', what: 'boost' })

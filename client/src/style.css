@@ -123,3 +123,4 @@ span.ico.sheet { background-color: transparent; border: 0; background-size: 400%
   #panel { left: 6px; right: 6px; top: 64px; transform: none; width: auto; max-height: calc(100% - 140px); }
 }
 #roomBar .sound { font-size: 11px; padding: 3px 8px; }
+.pix { display: grid; gap: 8px; justify-items: center; margin-top: 10px; } .pix img { width: 200px; height: 200px; image-rendering: pixelated; background: #fff; border-radius: 6px; } .pix-code { width: 100%; font-size: 11px; resize: none; }

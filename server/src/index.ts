@@ -100,6 +100,16 @@ export async function startServer(opt: ServerOptions = {}) {
 
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? '/', 'http://x')
+    // Aviso de pagamento do Mercado Pago: só diz "olhe o pagamento X"; o servidor confere direto na API deles.
+    if (req.method === 'POST' && url.pathname === '/api/pagamento/mercadopago') {
+      readBody(req).catch(() => ({} as Record<string, unknown>)).then(async (b) => {
+        const data = b.data as { id?: unknown } | undefined
+        const ref = String(data?.id ?? url.searchParams.get('data.id') ?? url.searchParams.get('id') ?? '')
+        if (ref) await payments.notified(ref).catch((e) => console.error('erro ao conferir pagamento', e))
+        json(res, 200, { ok: true })
+      })
+      return
+    }
     if (req.method === 'POST' && url.pathname.startsWith('/api/')) {
       api(req, res, url.pathname.slice(5)).catch((e) => { console.error('erro na API', e); if (!res.headersSent) json(res, 500, { error: 'Erro no servidor.' }) })
       return

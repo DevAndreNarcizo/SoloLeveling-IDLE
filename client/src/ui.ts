@@ -168,6 +168,14 @@ function modal(title: string, text: string) {
   $('modalTitle').textContent = title; $('modalText').textContent = text; $('modal').classList.remove('hidden')
   $('modalOk').focus()
 }
+/** Pix: QR Code e o código copia-e-cola, com botão de copiar. */
+function pixModal(text: string, pix: { code: string; qr: string }) {
+  modal('Pague com Pix', text)
+  const code = h('textarea', { readOnly: true, rows: 3, class: 'pix-code' }, pix.code) as HTMLTextAreaElement
+  const copy = btn('Copiar código', () => navigator.clipboard.writeText(pix.code).then(() => toast('Código Pix copiado.'), () => { code.select(); toast('Selecione e copie o código.') }))
+  const box = h('div', { class: 'pix' }, ...(pix.qr ? [h('img', { src: `data:image/png;base64,${pix.qr}`, alt: 'QR Code do Pix' })] : []), code, copy)
+  $('modalText').append(box)
+}
 const INVITE_LABEL: Record<InviteKind, string> = { party: 'Grupo', duel: 'Duelo', trade: 'Troca', guild: 'Guilda' }
 function showInvite(kind: InviteKind, from: string, text: string) {
   const card = h('div', { class: 'invite' }, h('b', {}, INVITE_LABEL[kind]), safe('span', text))
@@ -500,6 +508,6 @@ export function handleUi(m: ServerMsg) {
     case 'trade': if (m.trade) { if (open !== 'troca') openPanel('troca'); else renderPanel() } else if (open === 'troca') { open = null; $('panel').classList.add('hidden') } break
     case 'guild': if (open === 'guilda') renderPanel(); break
     case 'market': if (open === 'mercado') renderPanel(); break
-    case 'order': if (m.status === 'pending') modal('Pedido criado', m.text); break
+    case 'order': if (m.status === 'pending') { if (m.pix) pixModal(m.text, m.pix); else modal('Pedido criado', m.text) } break
   }
 }
