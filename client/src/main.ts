@@ -70,7 +70,9 @@ let chosen: ClassId = 'lamina'
 function renderClasses() {
   $('classCards').replaceChildren(...CLASS_IDS.map((id) => {
     const c = CLASSES[id]
-    const art = hasAsset(`cacadores/${id}`) ? Object.assign(document.createElement('img'), { src: assetUrl(`cacadores/${id}`), alt: '', className: 'classArt' }) : icon(`icones/classes/${id}`, c.name)
+    // A arte é a folha 4×4 de caminhada: mostra só o primeiro quadro (de frente, parado).
+    const art = hasAsset(`cacadores/${id}`) ? Object.assign(document.createElement('div'), { className: 'classArt' }) : icon(`icones/classes/${id}`, c.name)
+    if (art.className === 'classArt') art.style.backgroundImage = `url(${assetUrl(`cacadores/${id}`)})`
     return h('button', { type: 'button', class: `classCard${id === chosen ? ' on' : ''}`, onclick: () => { chosen = id; renderClasses() } },
       art, h('b', {}, c.name), h('span', {}, c.desc),
       h('span', {}, `${c.range > 100 ? 'À distância' : 'Corpo a corpo'} · ${c.atkPerSec} ataque/s · golpe de ${Math.round(c.dmgMult * 100)}%`))
