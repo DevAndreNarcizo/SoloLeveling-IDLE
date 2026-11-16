@@ -4,6 +4,7 @@ import { assetUrl, hasAsset, icon } from './assets.ts'
 import { api, connect, onMessage, send, state } from './net.ts'
 // Já começa a baixar o motor em segundo plano enquanto o jogador digita o login.
 const loadGame = import('./scene.ts')
+import { setGuide, tutorialEvent } from './tutorial.ts'
 import { h, handleUi, initUi, openPanel, openSocial, setHint } from './ui.ts'
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T
@@ -104,7 +105,9 @@ async function begin(token: string) {
       else if (m.t === 'char') { screen(null); show('hud', true) }
       else if (m.t === 'err' && !state.char) $('createError').textContent = m.text
       handleUi(m)
+      tutorialEvent({ kind: 'msg', m })
     })
+    setGuide((npc) => scene.guideTo(npc))
   }
   connect(token, (reason) => {
     // Sessão encerrada: volta para a tela de entrada, sem apagar nada do servidor.

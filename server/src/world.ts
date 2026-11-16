@@ -227,6 +227,11 @@ export class World {
       }
       case 'enchant': return this.enchant(s, m.id)
       case 'heal': return this.heal(s)
+      case 'tutorial': {
+        const step = Math.floor(Number(m.step))
+        if (c.tutorial !== undefined && step > c.tutorial && step <= 99) c.tutorial = step
+        return
+      }
       case 'buy': {
         const def = SHOP[m.what], n = Math.floor(Number(m.n))
         if (!def || !(n >= 1) || n > 999) return

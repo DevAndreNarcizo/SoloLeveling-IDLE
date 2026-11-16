@@ -101,3 +101,9 @@ button.link { background: none; border: 0; color: var(--accent2); padding: 2px; 
 
 .bar.hp i { background: #e5484d; }
 .logo { display: block; width: 112px; height: 112px; margin: 0 auto 4px; image-rendering: pixelated; }
+
+#tutorial { position: absolute; top: 96px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 32px)); background: rgba(20, 15, 38, .94); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; display: grid; gap: 4px; z-index: 6; }
+#tutorial small { color: var(--accent); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; font-size: 11px; }
+#tutorial p { margin: 0; line-height: 1.45; }
+#tutorial button { justify-self: end; background: none; border: 0; color: var(--muted); font-size: 12px; padding: 2px 0; cursor: pointer; }
+span.ico.sheet { background-color: transparent; border: 0; background-size: 400% 400%; background-position: 0 0; background-repeat: no-repeat; }

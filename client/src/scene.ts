@@ -243,6 +243,7 @@ export class GameScene extends Phaser.Scene {
         this.npcViews.push({ def: n, img, top: n.y - img.displayHeight, nextEmote: this.time.now + 3000 + Math.random() * 9000 })
         if (n.panel === 'fendas') this.decor.push(...this.fx.portal(n.x + 92, n.y - 2))
       }
+      this.placeGuide()
     }
   }
 
@@ -340,6 +341,23 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: t, scale: 1, duration: 110, ease: 'Back.easeOut' })
     this.tweens.add({ targets: t, y: y - 38, alpha: 0, delay: life * 0.25, duration: life * 0.75, ease: 'Quad.easeIn', onComplete: () => t.destroy() })
   }
+  // ---------- Tutorial: seta sobre o NPC do próximo passo ----------
+  private guideNpc: string | null = null
+  private guideArrow?: Phaser.GameObjects.GameObject
+  guideTo(npc: string | null) { this.guideNpc = npc; this.placeGuide() }
+  private placeGuide() {
+    this.guideArrow?.destroy(); this.guideArrow = undefined
+    const v = this.npcViews.find((o) => o.def.id === this.guideNpc)
+    if (!v) return
+    const y = v.top - 26
+    const a = hasFx('emote-exclamacao')
+      ? this.add.image(v.def.x, y, fxKey('emote-exclamacao')).setDisplaySize(30, 30)
+      : this.add.text(v.def.x, y, '▼', { fontSize: '22px', color: '#ffcf5c', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5)
+    a.setDepth(9600)
+    this.tweens.add({ targets: a, y: y - 8, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' })
+    this.guideArrow = a
+  }
+
   // ---------- Vida dos NPCs ----------
   /** Pulinho de quem foi chamado. */
   private hop(img: Phaser.GameObjects.Sprite) {

@@ -1,5 +1,5 @@
 // Resolve quais assets existem em public/assets e cria ícones para a interface.
-import { ASSET_BY_ID } from '../../shared/assets.ts'
+import { ANIMATED, ASSET_BY_ID } from '../../shared/assets.ts'
 import { MONSTERS } from '../../shared/content.ts'
 
 declare const __ASSET_FILES__: string[]
@@ -16,6 +16,13 @@ export function monsterKey(species: string): string {
 
 /** Ícone da interface: a imagem, se existir; senão, um quadrado com as iniciais. */
 export function icon(id: string, label: string): HTMLElement {
+  // Folha animada 4×4 (personagens e monstros): mostra só o primeiro quadro, de frente.
+  if (hasAsset(id) && ANIMATED.has(id) && !id.startsWith('npcs/')) {
+    const d = document.createElement('span')
+    d.className = 'ico sheet'; d.setAttribute('aria-hidden', 'true')
+    d.style.backgroundImage = `url(${assetUrl(id)})`
+    return d
+  }
   if (hasAsset(id)) {
     const img = document.createElement('img')
     img.className = 'ico'; img.src = assetUrl(id); img.alt = ''

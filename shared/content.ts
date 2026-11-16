@@ -287,12 +287,14 @@ export interface Character {
   rest?: { expPerMin: number; goldPerMin: number; since: number }
   /** Vida atual fora da caçada. Ausente = cheia. Volta aos poucos na cidade; a curandeira enche na hora. */
   hp?: number
+  /** Passo do tutorial (0 = início). Ausente = já concluído (caçadores criados antes do tutorial existir). */
+  tutorial?: number
 }
 export function newCharacter(name: string, cls: ClassId): Character {
   return {
     name, cls, level: 1, exp: 0, rank: 0, attrs: { ...CLASSES[cls].start }, points: 0,
     gold: START_KIT.gold, pocao: START_KIT.pocao, fragmento: START_KIT.fragmento, lasca: START_KIT.lasca,
-    items: [], equipped: {}, echoes: [], team: [], autoExtract: false, kills: 0, nextId: 1,
+    items: [], equipped: {}, echoes: [], team: [], autoExtract: false, kills: 0, nextId: 1, tutorial: 0,
   }
 }
 export interface Derived {

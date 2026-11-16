@@ -1,4 +1,5 @@
 // Interface em HTML sobre o canvas. Textos vindos de jogadores entram sempre por textContent.
+import { tutorialEvent } from './tutorial.ts'
 import {
   ARENA, ATTRS, ATTR_HELP, ATTR_NAMES, AUTO_EXTRACT_LEVEL, BAG_EXPANSIONS, CLASSES, CLASS_IDS, CRYSTAL_PACKS, ECHO_FUSE_COUNT, ECHO_LIMIT, ECHO_TIERS,
   ENCHANT_CHANCE, GUILD, MARKET, MAX_ENCHANT, MAX_LEVEL, MONSTERS, PARTY_MAX, PREMIUM, PROMOTIONS, RARITY_INFO, RIFTS, SHOP, SKILLS, SLOTS,
@@ -59,6 +60,7 @@ export function openPanel(id: string) {
   if (id === 'mochila') seenItems = state.char?.nextId ?? 0
   $('panel').classList.remove('hidden')
   renderPanel(); renderMenu()
+  tutorialEvent({ kind: 'panel', id })
 }
 export function openSocial(name: string) { socialName = name; openPanel('social') }
 export function closePanel() {

@@ -25,6 +25,7 @@ export type ClientMsg =
   | { t: 'enchant'; id: string }
   | { t: 'buy'; what: ShopId; n: number }
   | { t: 'heal' }
+  | { t: 'tutorial'; step: number }
   | { t: 'team'; ids: string[] }
   | { t: 'fuse'; species: string; tier: number }
   | { t: 'release'; id: string }

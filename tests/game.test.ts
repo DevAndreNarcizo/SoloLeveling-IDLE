@@ -430,6 +430,17 @@ describe('servidor', () => {
     back.ws.close(); b.ws.close()
   }, 60000)
 
+  it('tutorial: caçador novo começa no passo 0 e o progresso só avança', async () => {
+    const p = await player('tut_t', 'Novato')
+    expect(p.char.tutorial).toBe(0)
+    p.send({ t: 'tutorial', step: 3 })
+    p.send({ t: 'tutorial', step: 1 })
+    p.send({ t: 'tutorial', step: 9999 })
+    await new Promise((r) => setTimeout(r, 200))
+    expect(p.char.tutorial).toBe(3)
+    p.ws.close()
+  })
+
   it('curandeira: a vida sai da caçada, volta na cidade e é curada só de falar com ela', async () => {
     const p = await player('clara_t', 'Ferido')
     const max = derive(p.char).maxHp
