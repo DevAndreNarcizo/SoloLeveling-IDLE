@@ -35,6 +35,30 @@ def one(i, group, subject, size, solid=False):
     return {"id": i, "group": group, "kind": "solid" if solid else "glow", "size": size,
             "prompt": (SINGLE_SOLID if solid else SINGLE_GLOW).format(subject=subject)}
 
+# Personagens e objetos sólidos: fundo magenta (o recorte é o mesmo dos caçadores).
+SOLID_SHEET = ("16-bit pixel art sprite sheet for a top-down 2D RPG, in the style of classic JRPG overworld sprites, detailed "
+               "shading, muted dark fantasy palette. A strict grid of exactly 3 columns and 2 rows of equal square cells: 6 "
+               "animation frames read left to right, then top to bottom. {subject}. {frames} The same subject, the same size "
+               "and the same colors in every cell, centered, standing on the same ground line near the bottom of the cell, "
+               "never touching or crossing the cell edges. Crisp hard-edged pixels, 1-pixel dark outline, no anti-aliasing. "
+               "Plain solid magenta (#FF00FF) background, no text, no grid lines, no shadows, no ground.")
+WALK = ("Frames: a side-view walk cycle facing RIGHT, the whole body seen from the side, legs clearly alternating, "
+        "every frame facing right")
+
+def walker(i, group, subject, size):
+    return {"id": i, "group": group, "kind": "walk", "size": size, "prompt": SOLID_SHEET.format(subject="The subject: " + subject, frames=WALK)}
+
+def prop(i, group, subject, frames, size, fire=False):
+    return {"id": i, "group": group, "kind": "loop", "size": size, "fire": fire,
+            "prompt": SOLID_SHEET.format(subject="The subject: " + subject, frames="Frames: " + frames)}
+
+def npc(i, subject):
+    return {"id": i, "group": "npcs", "kind": "npc", "size": 84,
+            "prompt": ("16-bit pixel art full-body character sprite for a top-down 2D RPG, in the style of classic JRPG overworld "
+                       f"sprites, about three heads tall, detailed shading, muted dark fantasy palette: {subject}. One single "
+                       "character standing still, facing the camera, centered with wide empty margin, crisp hard-edged pixels, "
+                       "1-pixel dark outline, no anti-aliasing, plain solid magenta (#FF00FF) background, no text, no shadow, no ground.")}
+
 GROW = "1 small and faint, 2 growing, 3 full size and brightest, 4 starting to fade, 5 breaking into small pixel fragments, 6 only a few faint fragments left"
 LOOP = "6 frames of a seamless looping animation with small changes between frames, same size in every frame"
 ITEMS = [
@@ -87,6 +111,32 @@ ITEMS = [
      "prompt": "a single soft dark grey oval drop shadow blob seen from above, wider than tall, centered, on a plain pure white background, nothing else"},
     one("logo", "interface", "a game logo emblem without any letters: a violet portal tear behind a hooded hunter silhouette, framed by angular dark metal borders", 256, solid=True),
     one("favicon", "interface", "a vertical glowing violet and cyan dimensional rift tear, a crack of light in space", 64),
+    # ---------- Moradores (figurantes que andam pela cidade) ----------
+    walker("guarda", "moradores", "a city guard in a steel helmet and dark blue tabard, carrying a spear upright", 80),
+    walker("aldea", "moradores", "a village woman in a brown dress and white apron carrying a woven basket", 76),
+    walker("crianca", "moradores", "a small child in a green tunic and short brown hair, running happily", 56),
+    walker("velho", "moradores", "an old bearded man in a grey hooded robe walking slowly with a wooden cane", 74),
+    walker("carregador", "moradores", "a stocky porter in a sleeveless shirt carrying a wooden crate on his shoulder", 78),
+    walker("monge", "moradores", "a hooded monk in a long dark violet robe with a small glowing lantern", 78),
+    # ---------- Animais (cidade e fendas) ----------
+    walker("gato", "animais", "a small black cat with yellow eyes and its tail up", 28),
+    walker("cao", "animais", "a scruffy brown stray dog", 36),
+    walker("corvo", "animais", "a black crow hopping on the ground, pecking", 26),
+    walker("pombo", "animais", "a grey pigeon walking and bobbing its head", 22),
+    walker("rato", "animais", "a grey mine rat with a long pink tail", 22),
+    walker("coelho", "animais", "a grey forest rabbit hopping", 26),
+    walker("caranguejo", "animais", "a small teal crab walking sideways with raised claws", 24),
+    walker("salamandra", "animais", "a small black lizard with glowing orange spots on its back", 26),
+    # ---------- Objetos do cenário ----------
+    prop("tocha", "objetos", "a tall iron torch stand with a burning flame on top", "6 frames of the flame flickering in a seamless loop; the iron stand never changes", 72, fire=True),
+    prop("fogueira", "objetos", "a small campfire of crossed logs inside a ring of stones with burning flames", "6 frames of the flames flickering in a seamless loop; the logs and stones never change", 64, fire=True),
+    prop("cristal-de-fenda", "objetos", "a cluster of large glowing violet and cyan crystals growing from a dark rock", "6 frames of the crystals pulsing brighter and dimmer in a seamless loop; the shape never changes", 72),
+    prop("caldeirao", "objetos", "a black iron cauldron on short legs, full of bubbling glowing green liquid", "6 frames of the liquid bubbling in a seamless loop; the cauldron never changes", 56),
+    prop("estandarte", "objetos", "a tall wooden pole with a long violet banner bearing a silver portal emblem", "6 frames of the banner waving gently in the wind in a seamless loop; the pole never changes", 96),
+    prop("bau", "objetos", "a closed wooden treasure chest with dark iron bands and a golden lock", "6 identical frames of the chest, completely still", 48),
+    prop("quadro-de-avisos", "objetos", "a wooden notice board on two posts with pinned paper notes", "6 identical frames of the board, completely still", 72),
+    prop("lampiao", "objetos", "an iron street lamp post with a glass lantern glowing warm yellow on top", "6 frames of the lantern light flickering softly in a seamless loop; the post never changes", 96),
+    # NPCs com função: gerados no PixelLab (arte/pixellab/npcs/); a função npc() fica para gerar outros aqui.
     {"id": "fundo-login", "group": "interface", "kind": "wide", "size": 0,
      "prompt": "16-bit pixel art wide game title screen background: a lone hooded hunter seen from behind standing before a huge glowing violet rift in the middle of a dark night city plaza, shadows of creatures rising from the ground around, dark fantasy, detailed, crisp pixels, no text"},
 ]
@@ -109,7 +159,7 @@ def call(cmd):
     except json.JSONDecodeError: return {"success": False, "errors": [out[:300]]}
 
 def generate(acc, it):
-    if it["kind"] in ("sheet", "wide"):
+    if it["kind"] in ("sheet", "wide", "walk", "loop"):
         url = f"{API}/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-2-klein-4b"
         return call(["curl", "-sS", "-m", "240", "-X", "POST", url, "-F", "prompt=" + it["prompt"], "-F", "width=1536", "-F", "height=1024"])
     url = f"{API}/accounts/{acc}/ai/run/@cf/black-forest-labs/flux-1-schnell"

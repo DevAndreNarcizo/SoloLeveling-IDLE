@@ -5,6 +5,7 @@ import { NPCS } from '../../shared/content.ts'
 import type { Ent, Fx, RoomInfo } from '../../shared/protocol.ts'
 import { assetUrl, hasAsset, monsterKey } from './assets.ts'
 import { onMessage, send } from './net.ts'
+import { Decor } from './decor.ts'
 import { COLOR, Effects, fxKey, hasFx, preloadFx, shotFor, skillSprite, skillStyle, slashFor } from './fx.ts'
 
 // Formatos que a cena não carrega: ícones e fundo são da interface; 'props' só alimenta o montador de mapas.
@@ -51,6 +52,7 @@ export class GameScene extends Phaser.Scene {
   private snapN = 0
   private roomSnaps = 0
   private fx!: Effects
+  private scenery!: Decor
   /** Última habilidade de cada ator: os acertos que vêm logo depois usam o sprite dela. */
   private lastSkill = new Map<number, { name: string; at: number }>()
   onNearNpc: (npc: (typeof NPCS)[number] | null) => void = () => {}
@@ -82,6 +84,7 @@ export class GameScene extends Phaser.Scene {
       for (let i = 0; i < 16; i++) tex.add(i, 0, (i % 4) * fw, Math.floor(i / 4) * fw, fw, fw)
     }
     this.fx = new Effects(this)
+    this.scenery = new Decor(this)
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,LEFT,DOWN,RIGHT,E', false) as Record<string, Phaser.Input.Keyboard.Key>
     this.input.keyboard!.on('keydown-E', () => { if (!this.typing()) this.interact() })
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -178,6 +181,7 @@ export class GameScene extends Phaser.Scene {
     this.scale.off('resize', this.fitCamera, this); this.scale.on('resize', this.fitCamera, this)
     this.cameras.main.setBackgroundColor('#07060d')
     this.decor.push(...this.fx.ambient(room.map, room.w, room.h))
+    this.decor.push(...this.scenery.build(room.map, room.kind, room.w, room.h))
     if (room.kind === 'city') {
       for (const n of NPCS) {
         const key = `npcs/${n.id}`
@@ -372,6 +376,7 @@ export class GameScene extends Phaser.Scene {
 
   update(_t: number, deltaMs: number) {
     const dt = deltaMs / 1000
+    this.scenery.update(dt, this.time.now)
     const me = this.views.get(this.you)
     // Movimento na cidade: teclas ou toque no chão
     if (this.room?.kind === 'city') {

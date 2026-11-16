@@ -30,5 +30,9 @@
  "npcs/arquivista",
  "npcs/ferreira",
  "npcs/guardia-das-fendas",
- "npcs/mercador"
+ "npcs/joalheira",
+ "npcs/leiloeira",
+ "npcs/mercador",
+ "npcs/mestre-da-guilda",
+ "npcs/mestre-de-talentos"
 ]

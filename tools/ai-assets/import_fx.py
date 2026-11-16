@@ -15,7 +15,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from cloudflare_gen import ITEMS, OUT  # noqa: E402
-from import_sheet import remove_background, shrink  # noqa: E402
+from import_sheet import ANIMATED, drop_specks, remove_background, shrink  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(HERE))
 DEST = os.path.join(ROOT, "client/public/assets/fx")
@@ -88,6 +88,43 @@ def do_single(it, src):
     out = Image.new("RGBA", (n, n)); out.alpha_composite(small, ((n - small.width) // 2, (n - small.height) // 2))
     return out, 1
 
+def do_solid_sheet(it, src):
+    """Folha 3x2 de personagem ou objeto sobre magenta: pés na mesma linha, eixo no centro do tronco,
+    mesma escala em todos os quadros (a altura mediana vira it['size'])."""
+    a = remove_background(Image.open(src), fire=it.get("fire", False))
+    H, W = a.shape[:2]; cw, ch = W // 3, H // 2; ix, iy = int(cw * INSET), int(ch * INSET)
+    cells = []
+    for r in range(2):
+        for c in range(3):
+            cell = drop_specks(a[r * ch + iy:(r + 1) * ch - iy, c * cw + ix:(c + 1) * cw - ix].copy())
+            ys, xs = np.nonzero(cell[..., 3])
+            if len(ys) == 0: raise ValueError("quadro vazio")
+            top, bot = ys.min(), ys.max(); upper = ys < top + (bot - top) * 0.5
+            cells.append((cell, top, bot, int(np.median(xs[upper])), xs.min(), xs.max()))
+    k = it["size"] / float(np.median([c[2] - c[1] + 1 for c in cells]))
+    half = max(max(c[3] - c[4], c[5] - c[3]) for c in cells) + 2; up = max(c[2] - c[1] for c in cells) + 2
+    side = int(np.ceil(max(2 * half, up) * k)) + 4
+    sheet = Image.new("RGBA", (side * 6, side))
+    for i, (cell, top, bot, anc, _, _) in enumerate(cells):
+        pad = np.pad(cell, ((up, 0), (half, half), (0, 0)))
+        crop = pad[bot + 1:bot + up + 1, anc:anc + 2 * half]
+        w, h = max(1, round(crop.shape[1] * k)), max(1, round(crop.shape[0] * k))
+        sm = shrink(crop, w, h); sheet.alpha_composite(sm, (i * side + (side - w) // 2, side - h - 1))
+    return sheet, 6, side
+
+def do_npc(it, src):
+    """NPC parado: recorte do magenta, altura it['size'], salvo junto dos outros NPCs da cidade."""
+    a = drop_specks(remove_background(Image.open(src)))
+    ys, xs = np.nonzero(a[..., 3])
+    if len(ys) == 0: raise ValueError("imagem vazia depois de tirar o fundo")
+    a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]; k = it["size"] / a.shape[0]
+    sm = shrink(a, max(1, round(a.shape[1] * k)), it["size"])
+    out = Image.new("RGBA", (sm.width + 4, sm.height + 4)); out.alpha_composite(sm, (2, 2))
+    dest = os.path.join(ROOT, "client/public/assets/npcs", it["id"] + ".png"); out.save(dest)
+    ids = json.load(open(ANIMATED)); key = "npcs/" + it["id"]
+    if key not in ids: ids.append(key); ids.sort(); json.dump(ids, open(ANIMATED, "w"), indent=1, ensure_ascii=False); open(ANIMATED, "a").write("\n")
+    print("ok", it["id"], out.size, "-> npcs/")
+
 def main():
     args = sys.argv[1:]
     reg = json.load(open(REG)) if os.path.exists(REG) else {}
@@ -95,10 +132,15 @@ def main():
         if args and not any(it["group"].startswith(p) or it["id"].startswith(p) for p in args): continue
         src = os.path.join(OUT, it["group"], it["id"] + ".png")
         if not os.path.exists(src): continue
-        try: img, frames = do_sheet(it, src) if it["kind"] == "sheet" else do_single(it, src)
+        try:
+            if it["kind"] == "npc": do_npc(it, src); continue
+            side = 0
+            if it["kind"] in ("walk", "loop"): img, frames, side = do_solid_sheet(it, src)
+            elif it["kind"] == "sheet": img, frames = do_sheet(it, src)
+            else: img, frames = do_single(it, src)
         except ValueError as e: print("ERRO", it["id"], e); continue
         os.makedirs(DEST, exist_ok=True); img.save(os.path.join(DEST, it["id"] + ".png"))
-        reg[it["id"]] = {"group": it["group"], "frame": it["size"] or img.width, "frames": frames}
+        reg[it["id"]] = {"group": it["group"], "frame": side or it["size"] or img.width, "frames": frames}
         print("ok", it["id"], img.size)
     json.dump(dict(sorted(reg.items())), open(REG, "w"), indent=1, ensure_ascii=False); open(REG, "a").write("\n")
 

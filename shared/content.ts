@@ -153,6 +153,11 @@ export const NPCS: NpcDef[] = [
   { id: 'mercador', name: 'Tobias, o Mercador', role: 'Vende consumíveis', panel: 'loja', x: 435, y: 935 },
   { id: 'ferreira', name: 'Dária, a Ferreira', role: 'Aprimora equipamentos', panel: 'forja', x: 1485, y: 400 },
   { id: 'arquivista', name: 'Noé, o Arquivista', role: 'Mostra o ranking', panel: 'ranking', x: 1485, y: 935 },
+  // Cruzamentos dos caminhos e pontas da avenida central.
+  { id: 'mestre-de-talentos', name: 'Ezequiel, Mestre de Talentos', role: 'Distribui talentos', panel: 'talentos', x: 435, y: 660 },
+  { id: 'joalheira', name: 'Lia, a Joalheira', role: 'Loja de cristais', panel: 'cristais', x: 1485, y: 660 },
+  { id: 'mestre-da-guilda', name: 'Bruno, Mestre da Guilda', role: 'Cuida das guildas', panel: 'guilda', x: 900, y: 335 },
+  { id: 'leiloeira', name: 'Helena, a Leiloeira', role: 'Abre o mercado', panel: 'mercado', x: 1020, y: 1020 },
 ]
 
 // ---------- Progressão ----------
