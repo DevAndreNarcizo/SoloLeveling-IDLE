@@ -122,3 +122,4 @@ span.ico.sheet { background-color: transparent; border: 0; background-size: 400%
   #skills { bottom: 140px; }
   #panel { left: 6px; right: 6px; top: 64px; transform: none; width: auto; max-height: calc(100% - 140px); }
 }
+#roomBar .sound { font-size: 11px; padding: 3px 8px; }

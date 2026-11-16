@@ -6,6 +6,7 @@ import type { Ent, Fx, RoomInfo } from '../../shared/protocol.ts'
 import { assetUrl, hasAsset, monsterKey } from './assets.ts'
 import { onMessage, send } from './net.ts'
 import { Decor } from './decor.ts'
+import { Audio } from './audio.ts'
 import { COLOR, Effects, fxKey, hasFx, preloadFx, shotFor, skillSprite, skillStyle, slashFor } from './fx.ts'
 
 // Formatos que a cena não carrega: ícones e fundo são da interface; 'props' só alimenta o montador de mapas.
@@ -64,6 +65,7 @@ export class GameScene extends Phaser.Scene {
   private snapN = 0
   private roomSnaps = 0
   private fx!: Effects
+  sfx!: Audio
   private light = 0xffffff
   private scenery!: Decor
   /** Última habilidade de cada ator: os acertos que vêm logo depois usam o sprite dela. */
@@ -81,6 +83,7 @@ export class GameScene extends Phaser.Scene {
     for (const a of ASSETS) if (hasAsset(a.id) && !UI_ONLY.has(a.format)) this.load.image(a.id, assetUrl(a.id))
     for (const id of ATTACKS) this.load.image(`${id}-ataque`, `/assets/${id}-ataque.png`)
     preloadFx(this)
+    this.sfx = new Audio(this); this.sfx.preload()
   }
 
   create() {
@@ -101,6 +104,10 @@ export class GameScene extends Phaser.Scene {
       for (let i = 0; i < 16; i++) tex.add(i, 0, (i % 4) * fw, Math.floor(i / 4) * fw, fw, fw)
     }
     this.fx = new Effects(this)
+    this.sfx.apply()
+    // Botão de som da interface (fora do canvas) e tecla M.
+    window.addEventListener('toggle-sound', () => { const off = this.sfx.toggle(); window.dispatchEvent(new CustomEvent('sound-state', { detail: off })) })
+    this.input.keyboard!.on('keydown-M', () => { if (!this.typing()) window.dispatchEvent(new Event('toggle-sound')) })
     this.scenery = new Decor(this)
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,LEFT,DOWN,RIGHT,E', false) as Record<string, Phaser.Input.Keyboard.Key>
     this.input.keyboard!.on('keydown-E', () => { if (!this.typing()) this.interact() })
@@ -120,6 +127,7 @@ export class GameScene extends Phaser.Scene {
       else if (m.t === 'snap') this.applySnap(m.ents, m.fx)
       else if (m.t === 'healed') {
         const healer = this.npcViews.find((o) => o.def.panel === 'cura')
+        if (m.amount) this.sfx.play('cura', 0.6)
         if (healer) this.say(healer, m.amount ? 'Pronto, novo em folha. Boa caçada!' : 'Você já está bem! Volte quando precisar.')
         const v = this.views.get(this.you)
         if (v && m.amount) { this.fx.heal(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 60, `+${m.amount}`, '#5fd38a', 16, 1200) }
@@ -214,6 +222,7 @@ export class GameScene extends Phaser.Scene {
     this.scale.off('resize', this.fitCamera, this); this.scale.on('resize', this.fitCamera, this)
     this.cameras.main.setBackgroundColor('#07060d')
     this.decor.push(...this.fx.ambient(room.map, room.w, room.h))
+    this.sfx.room(room.map)
     this.decor.push(...this.scenery.build(room.map, room.kind, room.w, room.h, this.light))
     if (room.kind === 'city') {
       for (const n of NPCS) {
@@ -301,6 +310,7 @@ export class GameScene extends Phaser.Scene {
         if (this.roomSnaps > 1 && this.room?.kind !== 'city' && (e.k === 'm' || e.k === 'e')) {
           const boss = e.mk === 'chefe'
           this.fx.spawn(e.x, e.y, boss)
+          if (boss) this.sfx.play('rugido', 0.7)
           sprite.setScale(v.sx * 0.2, sprite.scaleY * 0.2).setAlpha(0)
           this.tweens.add({ targets: sprite, scaleX: v.sx, scaleY: Math.abs(v.sx), alpha: e.k === 'e' ? 0.88 : 1, duration: boss ? 520 : 260, ease: 'Back.easeOut' })
           if (boss) this.floatText(e.x, e.y - size - 30, `⚠ ${e.n ?? 'CHEFE'}`, '#ff6b7a', 20, 1500)
@@ -333,6 +343,7 @@ export class GameScene extends Phaser.Scene {
     v.sprite.setTintFill(0xffffff); v.bar?.destroy(); v.barFill?.destroy()
     this.time.delayedCall(70, () => { if (v.sprite.active) v.sprite.setTintFill(v.ent.k === 'p' ? 0x7a1f2a : 0x2a1f4a) })
     this.fx.death(v.box.x, v.box.y, h, boss)
+    this.sfx.play(boss ? 'rugido' : 'morte', boss ? 0.7 : 0.35, 120)
     this.tweens.add({ targets: v.sprite, scaleY: v.sprite.scaleY * 0.15, scaleX: v.sprite.scaleX * 1.25, alpha: 0, delay: boss ? 180 : 60, duration: boss ? 620 : 300, ease: 'Quad.easeIn', onComplete: () => v.box.destroy() })
   }
 
@@ -408,6 +419,8 @@ export class GameScene extends Phaser.Scene {
   private hitReact(f: Extract<Fx, { f: 'hit' }>, b: View, ang: number, lethal: boolean) {
     const h = b.h, bx = b.box.x, by = b.box.y - h * 0.5 - b.fly
     const boss = b.ent.mk === 'chefe', mine = !!b.ent.me, big = !!f.crit || !!f.skill
+    if (mine) this.sfx.play(Math.random() < 0.5 ? 'dano1' : 'dano2', 0.45, 120)
+    else this.sfx.play((['golpe1', 'golpe2', 'golpe3'] as const)[Math.floor(Math.random() * 3)], big ? 0.55 : 0.35)
     if (!lethal && b.sprite.active) {
       b.sprite.setTintFill(0xffffff); b.flashUntil = this.time.now + 60
       this.time.delayedCall(60, () => { if (b.sprite.active && !b.dying) this.baseTint(b) })
@@ -434,7 +447,9 @@ export class GameScene extends Phaser.Scene {
     if (f.proj) {
       // Disparo: recuo de quem atira e projétil da classe ou da espécie; o impacto só na chegada.
       this.nudge(a, -cx * 5, -cy * 3, 60)
-      this.fx.projectile(shotFor(f.proj, a.ent.s), ax + cx * 14, ay + cy * 10, bx, by, f.skill ? 56 : 40, () => {
+      const shot = shotFor(f.proj, a.ent.s)
+      this.sfx.play(shot === 'bola-de-fogo' ? 'fogo' : shot === 'lodo' ? 'lodo' : shot === 'flecha' ? 'metal' : 'magia', 0.25, 110)
+      this.fx.projectile(shot, ax + cx * 14, ay + cy * 10, bx, by, f.skill ? 56 : 40, () => {
         if (skillId) this.fx.play(skillId, bx - cx * 30, by - cy * 20, { size: 150, rotation: ang, ms: 420 })
         this.hitReact(f, b, ang, lethal)
       })
@@ -470,18 +485,20 @@ export class GameScene extends Phaser.Scene {
       if (v) {
         this.floatText(v.box.x, v.box.y - v.h - 14, f.name, skillStyle(f.name)?.kind === 'buff' ? '#ffcf5c' : '#7df2ff', 14, 1000)
         this.fx.cast(v.box.x, v.box.y, v.h, f.name)
+        this.sfx.play('magia', 0.45, 200)
       }
       if (f.x !== undefined && f.y !== undefined && f.r) this.fx.area(f.x, f.y, f.r, f.name)
     } else if (f.f === 'heal') {
       const v = this.views.get(f.to); if (v) { this.fx.heal(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 50, `+${f.amount}`, '#5fd38a') }
     } else if (f.f === 'level') {
-      const v = this.views.get(f.id); if (v) { this.fx.levelUp(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 90, 'SUBIU DE NÍVEL', '#ffcf5c', 18, 1400) }
+      const v = this.views.get(f.id); if (v) { this.fx.levelUp(v.box.x, v.box.y); this.sfx.play('nivel', 0.6); this.floatText(v.box.x, v.box.y - 90, 'SUBIU DE NÍVEL', '#ffcf5c', 18, 1400) }
     } else if (f.f === 'die') {
       // Caçador que cai continua na sala (volta depois): só o aviso e as faíscas.
       const v = this.views.get(f.id)
       if (v && v.ent.k === 'p') { this.fx.play('golpe-chefe', v.box.x, v.box.y - v.h / 2, { size: v.h * 1.2, ms: 360 }); this.floatText(v.box.x, v.box.y - 80, 'CAIU', '#ff6b7a', 16, 1200) }
     } else if (f.f === 'extract') {
       this.fx.extract(f.x, f.y, f.ok)
+      if (f.ok) this.sfx.play('evocacao', 0.6)
       this.floatText(f.x, f.y - 40, f.ok ? 'ECO EVOCADO' : 'falhou', f.ok ? '#b79cff' : '#9a93b5', f.ok ? 16 : 12)
     }
   }
@@ -551,7 +568,7 @@ export function startGame(): Promise<{ game: Phaser.Game; scene: GameScene }> {
     const game = new Phaser.Game({
       type: Phaser.AUTO, parent: 'game', backgroundColor: '#07060d', pixelArt: true, roundPixels: true,
       scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
-      scene, banner: false, audio: { noAudio: true },
+      scene, banner: false,
     })
     game.events.once('scene-ready', () => ready({ game, scene }))
   })

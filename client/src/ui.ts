@@ -82,6 +82,8 @@ const refreshMarket = () => send({ t: 'marketList', slot: marketSlot, mine: mark
 // ---------- HUD ----------
 /** Aparelho de toque (celular, tablet): os textos de ajuda falam em tocar, não em teclas. */
 const TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
+let soundOff = (() => { try { return localStorage.getItem('som') === 'off' } catch { return false } })()
+window.addEventListener('sound-state', (e) => { soundOff = (e as CustomEvent<boolean>).detail; renderRoomBar() })
 function renderMe() {
   const c = state.char, d = state.derived
   if (!c || !d) return
@@ -103,7 +105,7 @@ function renderMe() {
 function renderRoomBar() {
   const r = state.room, s = state.stats, c = state.char
   if (!r || !c) return
-  const kids: Child[] = [h('b', {}, r.title)]
+  const kids: Child[] = [h('b', {}, r.title), h('button', { type: 'button', class: 'sound', title: 'Ligar ou desligar o som (tecla M)', onclick: () => window.dispatchEvent(new Event('toggle-sound')) }, soundOff ? 'Som: desligado' : 'Som: ligado')]
   if (r.kind === 'city') kids.push(h('span', { class: 'muted help' }, TOUCH ? 'Toque no chão para andar · toque num NPC para falar' : 'WASD ou clique para andar · E ou clique fala com NPC · clique num caçador para interagir'))
   else {
     if (s) {
