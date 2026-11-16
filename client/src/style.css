@@ -107,3 +107,18 @@ button.link { background: none; border: 0; color: var(--accent2); padding: 2px; 
 #tutorial p { margin: 0; line-height: 1.45; }
 #tutorial button { justify-self: end; background: none; border: 0; color: var(--muted); font-size: 12px; padding: 2px 0; cursor: pointer; }
 span.ico.sheet { background-color: transparent; border: 0; background-size: 400% 400%; background-position: 0 0; background-repeat: no-repeat; }
+
+/* Celular: menu só com ícones numa fileira, ajuda curta e tutorial acima do chat. */
+@media (max-width: 600px) {
+  #menu { left: 4px; right: 4px; max-width: none; overflow: visible; gap: 2px; justify-content: space-between; }
+  #menu button { flex: 1 1 0; min-width: 0; padding: 6px 0; font-size: 0; }
+  #menu button .ico { width: 30px; height: 30px; }
+  #me { width: min(220px, calc(100vw - 20px)); font-size: 12px; gap: 3px; padding: 7px 9px; }
+  #roomBar { top: 10px; bottom: auto; left: auto; right: 8px; transform: none; max-width: 40vw; font-size: 12px; padding: 6px 8px; }
+  #roomBar .help { display: none; }
+  #chat { width: calc(100vw - 16px); left: 8px; bottom: 64px; } #chatLines { max-height: 40px; }
+  #tutorial { top: auto; bottom: 150px; font-size: 13px; padding: 8px 12px; }
+  #hint { bottom: 228px; font-size: 13px; }
+  #skills { bottom: 140px; }
+  #panel { left: 6px; right: 6px; top: 64px; transform: none; width: auto; max-height: calc(100% - 140px); }
+}

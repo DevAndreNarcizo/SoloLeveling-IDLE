@@ -80,6 +80,8 @@ function renderPanel() {
 const refreshMarket = () => send({ t: 'marketList', slot: marketSlot, mine: marketTab === 'meus' })
 
 // ---------- HUD ----------
+/** Aparelho de toque (celular, tablet): os textos de ajuda falam em tocar, não em teclas. */
+const TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
 function renderMe() {
   const c = state.char, d = state.derived
   if (!c || !d) return
@@ -102,7 +104,7 @@ function renderRoomBar() {
   const r = state.room, s = state.stats, c = state.char
   if (!r || !c) return
   const kids: Child[] = [h('b', {}, r.title)]
-  if (r.kind === 'city') kids.push(h('span', { class: 'muted' }, 'WASD ou toque para andar · E fala com NPC · toque num caçador para interagir'))
+  if (r.kind === 'city') kids.push(h('span', { class: 'muted help' }, TOUCH ? 'Toque no chão para andar · toque num NPC para falar' : 'WASD ou clique para andar · E ou clique fala com NPC · clique num caçador para interagir'))
   else {
     if (s) {
       const min = Math.max(s.seconds / 60, 1 / 60)
@@ -444,7 +446,9 @@ function renderTrade(): Node[] {
 
 // ---------- Ligações ----------
 const CHANNELS: { id: ChatChannel; label: string }[] = [{ id: 'global', label: 'Geral' }, { id: 'guild', label: 'Guilda' }, { id: 'party', label: 'Grupo' }]
+function touchTexts() { if (TOUCH) ($('chatInput') as HTMLInputElement).placeholder = 'Toque para conversar' }
 export function initUi() {
+  touchTexts()
   $('panelClose').onclick = closePanel
   $('modalOk').onclick = () => $('modal').classList.add('hidden')
   const sel = $('chatChannel') as HTMLSelectElement
