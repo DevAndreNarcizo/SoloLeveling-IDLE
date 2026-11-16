@@ -3,7 +3,7 @@
 import {
   ARENA, ATTRS, AUTO_EXTRACT_LEVEL, BAG_EXPANSIONS, CITY_MAP, CITY_NAME, CLASSES, ECHO_FUSE_COUNT, ECHO_TIERS, ENCHANT_CHANCE, GUILD, HUNT_MAP,
   MARKET, MAX_ENCHANT, MONSTERS, PARTY_MAX, PREMIUM, PROMOTIONS, RANKS, REST, SHOP, SLOTS, TALENT_BY_ID, TALENT_MAX, TALENT_TIER_POINTS,
-  addExp, bagSize, derive, echoFuseCost, enchantCost, findBand, guildFundsFor, itemName, newCharacter, pathPoints, rankOf, sellPrice,
+  addExp, bagSize, derive, HEAL, healCost, echoFuseCost, enchantCost, findBand, guildFundsFor, itemName, newCharacter, pathPoints, rankOf, sellPrice,
   talentPoints, talentResetCost, type Character, type ClassId, type Echo, type Item,
 } from '../../shared/content.ts'
 import type { ChatChannel, ClientMsg, Ent, Fx, GuildView, InviteKind, MarketRow, PartyView, RoomInfo, ServerMsg, TradeView } from '../../shared/protocol.ts'
@@ -141,6 +141,7 @@ export class World {
   }
 
   private toCity(s: Session) {
+    if (s.hunt) this.keepHp(s, s.hunt)
     s.hunt = null; s.dx = 0; s.dy = 0
     s.x = CITY_MAP.w / 2 + (this.rng() - 0.5) * 120; s.y = CITY_MAP.h / 2 + 60 + (this.rng() - 0.5) * 80
     const room: RoomInfo = { kind: 'city', w: CITY_MAP.w, h: CITY_MAP.h, map: 'cidade', title: CITY_NAME }
@@ -225,6 +226,7 @@ export class World {
         c.gold += gold; if (gold) this.log(s, `Peças comuns vendidas por ${gold} de ouro.`, 'loot'); return this.changed(s)
       }
       case 'enchant': return this.enchant(s, m.id)
+      case 'heal': return this.heal(s)
       case 'buy': {
         const def = SHOP[m.what], n = Math.floor(Number(m.n))
         if (!def || !(n >= 1) || n > 999) return
@@ -405,9 +407,31 @@ export class World {
   }
   /** Tira um membro de uma caçada em grupo sem encerrar a instância dos outros. */
   private dropFromHunt(s: Session, h: Hunt) {
+    this.keepHp(s, h)
     const i = h.members.findIndex((m) => m.key === s.accountId)
     if (i >= 0) h.members.splice(i, 1)
     s.hunt = null
+  }
+
+  /** Guarda a vida com que o caçador sai da caçada (quem caiu volta com um quarto da vida). */
+  private keepHp(s: Session, h: Hunt) {
+    if (h.opt.mode !== 'hunt' || !s.char) return
+    const m = h.members.find((o) => o.key === s.accountId)
+    if (!m) return
+    const max = derive(s.char).maxHp, hp = m.actor.hp > 0 ? Math.round(m.actor.hp) : Math.round(max * HEAL.afterFallPct)
+    if (hp >= max) delete s.char.hp; else s.char.hp = hp
+  }
+  /** Curandeira: enche a vida na hora (grátis para iniciantes). */
+  private heal(s: Session) {
+    const c = s.char!
+    if (s.hunt) return this.err(s, 'A curandeira só atende na cidade.')
+    const max = derive(c).maxHp, missing = c.hp === undefined ? 0 : max - c.hp
+    if (missing <= 0) return this.err(s, 'Sua vida já está cheia.')
+    const cost = healCost(c.level, missing)
+    if (c.gold < cost) return this.err(s, `A cura custa ${cost} de ouro.`)
+    c.gold -= cost; delete c.hp
+    this.sendChar(s); s.send({ t: 'healed', amount: missing, cost })
+    this.log(s, cost ? `Irmã Clara curou ${missing} de vida por ${cost} de ouro.` : `Irmã Clara curou ${missing} de vida.`, 'good')
   }
 
   private async finishHunt(h: Hunt) {
@@ -873,7 +897,17 @@ export class World {
     }
   }
   /** Uma vez por segundo: repõe o orçamento de mensagens. */
-  second() { for (const s of this.sessions.values()) s.budget = 40 }
+  second() {
+    for (const s of this.sessions.values()) {
+      s.budget = 40
+      // Na cidade a vida volta aos poucos; o jogador vê a barra subir a cada 3 s.
+      const c = s.char
+      if (!c || s.hunt || c.hp === undefined) continue
+      const max = derive(c).maxHp
+      c.hp = Math.min(max, c.hp + Math.max(1, Math.round(max * HEAL.cityRegenPerSec)))
+      if (c.hp >= max) { delete c.hp; this.sendChar(s) } else if (Math.floor(this.now() / 1000) % 3 === 0) this.sendChar(s)
+    }
+  }
   async saveAll() { for (const s of [...this.sessions.values()]) if (s.char) await this.db.saveCharacter(s.accountId, s.char).catch((e) => console.error('erro ao salvar', e)) }
   /** Limpeza periódica: registros de chat com mais de 30 dias e sessões e pedidos de senha vencidos. */
   async cleanup() {

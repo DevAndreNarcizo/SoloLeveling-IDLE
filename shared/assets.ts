@@ -37,6 +37,7 @@ add('NPCs da cidade', 'image', 'npcs', [
   ['mercador', 'Tobias, o Mercador', 'a cheerful stocky merchant with a big backpack full of bottles and pouches, brown apron, facing the viewer'],
   ['ferreira', 'Dária, a Ferreira', 'a muscular blacksmith woman with a leather apron, soot on her arms, holding a hammer on her shoulder, facing the viewer'],
   ['arquivista', 'Noé, o Arquivista', 'a thin elderly archivist with round glasses, grey robe, carrying a large book and a quill, facing the viewer'],
+  ['curandeira', 'Irmã Clara, a Curandeira', 'a kind young healer nun in a white and pale green habit holding a glowing green healing orb'],
   ['mestre-da-guilda', 'Bruno, Mestre da Guilda', 'a broad-shouldered veteran hunter with a grey beard and a violet guild sash, arms crossed'],
   ['leiloeira', 'Helena, a Leiloeira', 'an elegant auctioneer woman with red hair, spectacles, a burgundy vest, holding a gavel'],
   ['mestre-de-talentos', 'Ezequiel, Mestre de Talentos', 'an elderly sage in deep blue rune robes holding a floating glowing tome'],

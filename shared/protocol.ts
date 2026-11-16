@@ -24,6 +24,7 @@ export type ClientMsg =
   | { t: 'sellCommons' }
   | { t: 'enchant'; id: string }
   | { t: 'buy'; what: ShopId; n: number }
+  | { t: 'heal' }
   | { t: 'team'; ids: string[] }
   | { t: 'fuse'; species: string; tier: number }
   | { t: 'release'; id: string }
@@ -93,6 +94,7 @@ export interface Acct { crystals: number; role: string; rating: number; hasEmail
 export type ServerMsg =
   | { t: 'needChar' }
   | { t: 'char'; c: Character; d: Derived }
+  | { t: 'healed'; amount: number; cost: number }
   | { t: 'acct'; a: Acct }
   | { t: 'room'; room: RoomInfo; you: number }
   | { t: 'snap'; ents: Ent[]; fx: Fx[]; stats?: HuntStats; cds?: number[] }

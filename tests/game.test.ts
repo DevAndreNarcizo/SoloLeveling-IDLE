@@ -430,6 +430,35 @@ describe('servidor', () => {
     back.ws.close(); b.ws.close()
   }, 60000)
 
+  it('curandeira: a vida sai da caçada, volta na cidade e é curada (paga a partir do nível 10)', async () => {
+    const p = await player('clara_t', 'Ferido')
+    const max = derive(p.char).maxHp
+    p.flush()
+    p.send({ t: 'heal' })
+    expect((await p.waitFor('err')).text).toMatch(/cheia/)
+    // Caça e sai ferido: a vida com que saiu fica guardada e é a de entrada na próxima caçada
+    p.send({ t: 'enterHunt', rift: 'minas-ocas', band: 0 })
+    await p.waitFor('room', (m) => m.room.kind === 'hunt')
+    const m = p.sess.hunt!.members[0]; m.actor.hp = 7
+    p.send({ t: 'leave' })
+    await p.waitFor('room', (m) => m.room.kind === 'city')
+    expect(p.char.hp).toBe(7)
+    // Na cidade volta sozinha
+    srv.world.second()
+    expect(p.char.hp).toBeGreaterThan(7)
+    // Iniciante: grátis
+    p.flush(); p.send({ t: 'heal' })
+    const h1 = await p.waitFor('healed')
+    expect(h1.cost).toBe(0); expect(p.char.hp).toBeUndefined()
+    // Nível 20: cobra ouro proporcional à vida que falta
+    p.char.level = 20; const max20 = derive(p.char).maxHp; p.char.hp = max20 - 100; const gold = p.char.gold
+    p.flush(); p.send({ t: 'heal' })
+    const h2 = await p.waitFor('healed')
+    expect(h2.cost).toBe(10); expect(p.char.gold).toBe(gold - 10); expect(p.char.hp).toBeUndefined()
+    expect(max).toBeGreaterThan(0)
+    p.ws.close()
+  })
+
   it('cristais: compra confirmada uma única vez e gasto na loja premium', async () => {
     const a = await player('prm_a', 'Quim')
     a.send({ t: 'premium', what: 'boost' })

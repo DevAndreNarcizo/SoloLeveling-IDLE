@@ -157,6 +157,7 @@ export const NPCS: NpcDef[] = [
   { id: 'mestre-de-talentos', name: 'Ezequiel, Mestre de Talentos', role: 'Distribui talentos', panel: 'talentos', x: 435, y: 660, lines: ['Todo poder começa por uma escolha.', 'Seus talentos ainda dormem, jovem.', 'Medite antes de gastar seus pontos.'] },
   { id: 'joalheira', name: 'Lia, a Joalheira', role: 'Loja de cristais', panel: 'cristais', x: 1485, y: 660, lines: ['Olha só o brilho deste cristal!', 'Cristais de fenda, lapidados por mim.', 'Cuidado, esse aqui morde.'] },
   { id: 'mestre-da-guilda', name: 'Bruno, Mestre da Guilda', role: 'Cuida das guildas', panel: 'guilda', x: 900, y: 335, lines: ['Sozinho você vai longe. Em guilda, mais longe.', 'Procurando companheiros de caça?', 'Já vi muitos caçadores caírem. Não seja um.'] },
+  { id: 'curandeira', name: 'Irmã Clara, a Curandeira', role: 'Cura os caçadores', panel: 'cura', x: 700, y: 480, lines: ['Ferido? Venha, deixe-me ver isso.', 'A luz cuida de quem caça nas sombras.', 'Descanse um pouco antes da próxima fenda.'] },
   { id: 'leiloeira', name: 'Helena, a Leiloeira', role: 'Abre o mercado', panel: 'mercado', x: 1020, y: 1020, lines: ['Dou-lhe uma, dou-lhe duas...', 'O mercado está agitado hoje!', 'Tem algo para vender? Eu cuido do resto.'] },
 ]
 
@@ -284,6 +285,8 @@ export interface Character {
   kills: number; nextId: number
   talents?: Record<string, number>; expBoostUntil?: number; bagExtra?: number
   rest?: { expPerMin: number; goldPerMin: number; since: number }
+  /** Vida atual fora da caçada. Ausente = cheia. Volta aos poucos na cidade; a curandeira enche na hora. */
+  hp?: number
 }
 export function newCharacter(name: string, cls: ClassId): Character {
   return {
@@ -407,6 +410,12 @@ export const SKILLS: Record<ClassId, SkillDef[]> = {
 }
 
 // ---------- Grupo, arena, guilda, mercado ----------
+// ---------- Curandeira ----------
+/** Na cidade a vida volta sozinha (0,5% por segundo: cheia em ~3 min). A curandeira enche na hora. */
+export const HEAL = { cityRegenPerSec: 0.005, freeBelowLevel: 10, goldPerHp: 0.1, afterFallPct: 0.25 }
+/** Preço da cura: grátis para iniciantes; depois, 1 ouro a cada 10 de vida que falta. */
+export const healCost = (level: number, missing: number) => level < HEAL.freeBelowLevel ? 0 : Math.ceil(missing * HEAL.goldPerHp)
+
 export const PARTY_MAX = 4
 export const PARTY_SHARE = 0.75 // parte da EXP e do ouro que cada membro recebe em grupo
 export const ARENA = { minLevel: 10, seconds: 90, hpMult: 3, k: 24, startRating: 1000 }

@@ -63,7 +63,7 @@ def prop(i, group, subject, frames, size, fire=False):
             "prompt": SOLID_SHEET.format(subject="The subject: " + subject, frames="Frames: " + frames)}
 
 def npc(i, subject):
-    return {"id": i, "group": "npcs", "kind": "npc", "size": 84,
+    return {"id": i, "group": "postos", "kind": "npc", "size": 84,
             "prompt": ("16-bit pixel art full-body character sprite for a top-down 2D RPG, in the style of classic JRPG overworld "
                        f"sprites, about three heads tall, detailed shading, muted dark fantasy palette: {subject}. One single "
                        "character standing still, facing the camera, centered with wide empty margin, crisp hard-edged pixels, "
@@ -154,6 +154,8 @@ ITEMS = [
     one("pulpito-leilao", "postos", "a small dark wooden auction podium lectern with a brass bell and an open ledger on top, seen from the front", 72, solid=True),
     one("pedestal-runico", "postos", "a short stone pedestal carved with glowing cyan runes, with a floating glowing orb above it, seen from the front", 64, solid=True),
     one("mesa-guilda", "postos", "a sturdy wooden table covered with maps, a dagger stuck in the wood and a small violet guild banner on a stand behind it, seen from the front and slightly above", 80, solid=True),
+    one("tenda-cura", "postos", "a small healer's stall: a wooden table with green herbs, bandages, glowing green potion bottles and a mortar, under a small white cloth canopy with a green cross, seen from the front and slightly above", 96, solid=True),
+    npc("curandeira", "a kind young healer nun with a white and pale green hooded habit, a green cross pendant, a satchel of herbs, holding a small glowing green healing orb"),
     one("luz", "postos", "a soft round warm yellow light glow pool, fading to black at the edges", 64),
     # ---------- Emotes e balão de fala dos NPCs ----------
     one("emote-exclamacao", "emotes", "a bold yellow exclamation mark inside a small white round speech bubble", 32, solid=True),
@@ -171,6 +173,7 @@ ITEMS = [
     npc_idle("leiloeira", "tapping the gavel on the ledger"),
     npc_idle("mestre-de-talentos", "the floating tome glowing brighter"),
     npc_idle("joalheira", "raising the crystal to look at it"),
+    npc_idle("curandeira", "raising the glowing healing orb with both hands"),
     # NPCs com função: gerados no PixelLab (arte/pixellab/npcs/); a função npc() fica para gerar outros aqui.
     {"id": "fundo-login", "group": "interface", "kind": "wide", "size": 0,
      "prompt": "16-bit pixel art wide game title screen background: a lone hooded hunter seen from behind standing before a huge glowing violet rift in the middle of a dark night city plaza, shadows of creatures rising from the ground around, dark fantasy, detailed, crisp pixels, no text"},

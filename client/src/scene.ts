@@ -29,7 +29,7 @@ const LIGHT: Record<string, number> = {
 const STATIONS: Record<string, [string, number, number, number]> = {
   mercador: ['banca-mercador', 0, -16, 92], ferreira: ['bigorna', 34, 4, 56], arquivista: ['estante-livros', 0, -18, 100],
   joalheira: ['balcao-joias', 0, -14, 70], leiloeira: ['pulpito-leilao', 30, 2, 70], 'mestre-de-talentos': ['pedestal-runico', -34, 2, 64],
-  'mestre-da-guilda': ['mesa-guilda', 0, -14, 76],
+  'mestre-da-guilda': ['mesa-guilda', 0, -14, 76], curandeira: ['tenda-cura', 0, -16, 96],
 }
 const FLYERS = new Set(['morcego-de-cinza', 'asa-ancia', 'brasa-errante', 'coracao-de-fornalha'])
 const hsl = (h: number, s: number, l: number) => `hsl(${h % 360} ${s}% ${l}%)`
@@ -114,6 +114,7 @@ export class GameScene extends Phaser.Scene {
     onMessage((m) => {
       if (m.t === 'room') this.enterRoom(m.room, m.you)
       else if (m.t === 'snap') this.applySnap(m.ents, m.fx)
+      else if (m.t === 'healed') { const v = this.views.get(this.you); if (v) { this.fx.heal(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 60, `+${m.amount}`, '#5fd38a', 16, 1200) } }
     })
     this.game.events.emit('scene-ready')
   }

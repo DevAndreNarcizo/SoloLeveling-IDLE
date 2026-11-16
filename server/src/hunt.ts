@@ -92,10 +92,12 @@ export class Hunt {
 
   private addMember(init: MemberInit, index: number, count: number) {
     const c = init.c, d = derive(c), cls = CLASSES[c.cls], duel = this.opt.mode === 'duel'
-    const hp = duel ? d.maxHp * ARENA.hpMult : d.maxHp
+    // Na caçada o caçador entra com a vida que tinha; no duelo e no teste de promoção, cheio.
+    const hp = duel ? d.maxHp * ARENA.hpMult : this.opt.mode === 'hunt' ? Math.max(1, Math.min(d.maxHp, c.hp ?? d.maxHp)) : d.maxHp
     const x = duel ? this.w / 2 + (index ? 220 : -220) : this.w / 2 + (index - (count - 1) / 2) * 50
+    const mhp = duel ? hp : d.maxHp
     const actor: Actor = {
-      id: this.nextId++, team: duel ? index : 0, k: 'p', x, y: this.h / 2, hp, mhp: hp, atk: d.atk, def: d.def, range: d.range,
+      id: this.nextId++, team: duel ? index : 0, k: 'p', x, y: this.h / 2, hp, mhp, atk: d.atk, def: d.def, range: d.range,
       atkPerSec: d.atkPerSec, cd: duel ? 1 : 0, speed: d.speed, mult: cls.dmgMult, sprite: c.cls, name: c.name, proj: cls.projectile === 'none' ? undefined : cls.projectile,
     }
     const m: Member = {
