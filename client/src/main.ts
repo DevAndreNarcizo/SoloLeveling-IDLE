@@ -2,7 +2,8 @@
 import { CLASSES, CLASS_IDS, GAME_NAME, type ClassId } from '../../shared/content.ts'
 import { assetUrl, hasAsset, icon } from './assets.ts'
 import { api, connect, onMessage, send, state } from './net.ts'
-import { startGame } from './scene.ts'
+// Já começa a baixar o motor em segundo plano enquanto o jogador digita o login.
+const loadGame = import('./scene.ts')
 import { h, handleUi, initUi, openPanel, openSocial, setHint } from './ui.ts'
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T
@@ -92,6 +93,8 @@ async function begin(token: string) {
   if (!started) {
     started = true
     initUi()
+    // O motor do jogo (Phaser, a maior parte do código) só baixa depois do login: a tela de entrada abre na hora.
+    const { startGame } = await loadGame
     const { game, scene } = await startGame()
     game.events.on('npc', (panel: string) => openPanel(panel))
     game.events.on('player', (name: string) => openSocial(name))

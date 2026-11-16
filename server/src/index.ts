@@ -1,6 +1,7 @@
 // Servidor HTTP (contas + arquivos do cliente) e WebSocket (jogo em tempo real).
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
-import { createReadStream, existsSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs'
+import { gzipSync } from 'node:zlib'
 import { extname, join, normalize, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { WebSocketServer, type WebSocket } from 'ws'
@@ -14,6 +15,8 @@ import { World, type Session } from './world.ts'
 const ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
 const PORT = Number(process.env.PORT ?? 3000)
 const DIST = join(ROOT, 'client/dist')
+/** Arquivos já comprimidos (o cliente compilado não muda enquanto o servidor roda). */
+const gzCache = new Map<string, Buffer>()
 const TICK_MS = 100
 const USER_RE = /^[a-zA-Z0-9_]{3,16}$/
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
@@ -108,12 +111,21 @@ export async function startServer(opt: ServerOptions = {}) {
     let file = join(DIST, rel)
     if (!file.startsWith(DIST) || !existsSync(file) || statSync(file).isDirectory()) file = join(DIST, 'index.html')
     if (!existsSync(file)) { res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }); return res.end('Cliente não compilado. Rode: npm run build') }
+    const zip = /\.(js|css|html|json|svg)$/.test(file) && /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? ''))
     res.writeHead(200, {
+      ...(zip ? { 'content-encoding': 'gzip', vary: 'accept-encoding' } : {}),
       'content-type': MIME[extname(file)] ?? 'application/octet-stream',
       'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', // o link de troca de senha não vaza por Referer
-      'cache-control': file.endsWith('index.html') ? 'no-cache' : 'public, max-age=3600',
+      // Arquivos com hash no nome (assets/index-AbC123.js) nunca mudam: o navegador guarda por um ano.
+      'cache-control': file.endsWith('index.html') ? 'no-cache' : /[/\\]assets[/\\][^/\\]+-[A-Za-z0-9_-]{8}\.(js|css)$/.test(file) ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
     })
     if (req.method === 'HEAD') return res.end()
+    // Texto (JS, CSS, HTML, JSON) vai comprimido: o motor do jogo cai de ~1,5 MB para ~350 KB.
+    if (/\.(js|css|html|json|svg)$/.test(file) && /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? ''))) {
+      let gz = gzCache.get(file)
+      if (!gz) { gz = gzipSync(readFileSync(file), { level: 9 }); gzCache.set(file, gz) }
+      return res.end(gz)
+    }
     createReadStream(file).pipe(res)
   })
 
