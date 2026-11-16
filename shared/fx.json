@@ -1,0 +1,217 @@
+{
+ "barra-de-vida": {
+  "group": "interface",
+  "frame": 64,
+  "frames": 1
+ },
+ "barreira": {
+  "group": "habilidades",
+  "frame": 144,
+  "frames": 6
+ },
+ "bola-de-fogo": {
+  "group": "projeteis",
+  "frame": 56,
+  "frames": 6
+ },
+ "bolha": {
+  "group": "cenario",
+  "frame": 16,
+  "frames": 1
+ },
+ "brasa": {
+  "group": "cenario",
+  "frame": 16,
+  "frames": 1
+ },
+ "chuva-de-flechas": {
+  "group": "habilidades",
+  "frame": 192,
+  "frames": 6
+ },
+ "critico": {
+  "group": "golpes",
+  "frame": 112,
+  "frames": 6
+ },
+ "cura": {
+  "group": "eventos",
+  "frame": 112,
+  "frames": 6
+ },
+ "espinho": {
+  "group": "projeteis",
+  "frame": 40,
+  "frames": 6
+ },
+ "evocacao": {
+  "group": "eventos",
+  "frame": 160,
+  "frames": 6
+ },
+ "explosao-arcana": {
+  "group": "habilidades",
+  "frame": 208,
+  "frames": 6
+ },
+ "faisca": {
+  "group": "cenario",
+  "frame": 16,
+  "frames": 1
+ },
+ "favicon": {
+  "group": "interface",
+  "frame": 64,
+  "frames": 1
+ },
+ "flecha": {
+  "group": "projeteis",
+  "frame": 48,
+  "frames": 6
+ },
+ "foco": {
+  "group": "habilidades",
+  "frame": 112,
+  "frames": 6
+ },
+ "fundo-login": {
+  "group": "interface",
+  "frame": 1536,
+  "frames": 1
+ },
+ "garra": {
+  "group": "golpes",
+  "frame": 96,
+  "frames": 6
+ },
+ "giro-de-aco": {
+  "group": "habilidades",
+  "frame": 192,
+  "frames": 6
+ },
+ "golpe-chefe": {
+  "group": "golpes",
+  "frame": 160,
+  "frames": 6
+ },
+ "golpe-lamina": {
+  "group": "golpes",
+  "frame": 96,
+  "frames": 6
+ },
+ "golpe-pesado": {
+  "group": "habilidades",
+  "frame": 144,
+  "frames": 6
+ },
+ "golpe-vulto": {
+  "group": "golpes",
+  "frame": 96,
+  "frames": 6
+ },
+ "impacto": {
+  "group": "golpes",
+  "frame": 64,
+  "frames": 6
+ },
+ "lanca-arcana": {
+  "group": "habilidades",
+  "frame": 144,
+  "frames": 6
+ },
+ "leque-de-laminas": {
+  "group": "habilidades",
+  "frame": 192,
+  "frames": 6
+ },
+ "lodo": {
+  "group": "projeteis",
+  "frame": 48,
+  "frames": 6
+ },
+ "logo": {
+  "group": "interface",
+  "frame": 256,
+  "frames": 1
+ },
+ "morte": {
+  "group": "eventos",
+  "frame": 128,
+  "frames": 6
+ },
+ "morte-chefe": {
+  "group": "eventos",
+  "frame": 224,
+  "frames": 6
+ },
+ "nevoa": {
+  "group": "cenario",
+  "frame": 32,
+  "frames": 1
+ },
+ "orbe-arcano": {
+  "group": "projeteis",
+  "frame": 48,
+  "frames": 6
+ },
+ "passo-sombrio": {
+  "group": "habilidades",
+  "frame": 144,
+  "frames": 6
+ },
+ "perfurar": {
+  "group": "habilidades",
+  "frame": 128,
+  "frames": 6
+ },
+ "poeira": {
+  "group": "cenario",
+  "frame": 12,
+  "frames": 1
+ },
+ "portal": {
+  "group": "cenario",
+  "frame": 160,
+  "frames": 6
+ },
+ "postura-de-ferro": {
+  "group": "habilidades",
+  "frame": 144,
+  "frames": 6
+ },
+ "resquicio": {
+  "group": "cenario",
+  "frame": 48,
+  "frames": 1
+ },
+ "sombra": {
+  "group": "interface",
+  "frame": 48,
+  "frames": 1
+ },
+ "subir-nivel": {
+  "group": "eventos",
+  "frame": 160,
+  "frames": 6
+ },
+ "surgimento": {
+  "group": "eventos",
+  "frame": 112,
+  "frames": 6
+ },
+ "surgimento-chefe": {
+  "group": "eventos",
+  "frame": 224,
+  "frames": 6
+ },
+ "tiro-certeiro": {
+  "group": "habilidades",
+  "frame": 128,
+  "frames": 6
+ },
+ "vagalume": {
+  "group": "cenario",
+  "frame": 16,
+  "frames": 1
+ }
+}

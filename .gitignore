@@ -4,3 +4,5 @@ data/
 *.log
 .env
 __pycache__/
+tools/ai-assets/.cloudflare_account
+arte/pacotes/
