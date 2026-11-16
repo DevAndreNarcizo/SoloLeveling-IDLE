@@ -84,6 +84,7 @@ def do_single(it, src):
     a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
     n = it["size"]; h, w = a.shape[:2]; k = n / max(h, w)
     small = shrink(a, max(1, round(w * k)), max(1, round(h * k))) if it["kind"] in ("solid", "dark") else fit([a], max(round(w * k), round(h * k)))[0]
+    if it["id"] == "barra-de-vida": return small, 1   # barra: mantém a proporção larga, sem moldura quadrada
     out = Image.new("RGBA", (n, n)); out.alpha_composite(small, ((n - small.width) // 2, (n - small.height) // 2))
     return out, 1
 

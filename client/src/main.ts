@@ -18,6 +18,7 @@ const store = {
 
 document.title = GAME_NAME
 $('gameTitle').textContent = GAME_NAME
+if (hasAsset('ui/logo')) $('gameTitle').before(Object.assign(document.createElement('img'), { src: assetUrl('ui/logo'), alt: '', className: 'logo' }))
 if (hasAsset('ui/fundo-login')) for (const id of SCREENS) $(id).style.backgroundImage = `linear-gradient(rgba(7,6,13,.45), rgba(7,6,13,.8)), url(${assetUrl('ui/fundo-login')})`
 if (hasAsset('ui/favicon')) document.head.append(Object.assign(document.createElement('link'), { rel: 'icon', type: 'image/png', href: assetUrl('ui/favicon') }))
 

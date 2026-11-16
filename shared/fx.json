@@ -11,7 +11,7 @@
  },
  "bola-de-fogo": {
   "group": "projeteis",
-  "frame": 56,
+  "frame": 64,
   "frames": 6
  },
  "bolha": {
@@ -41,7 +41,7 @@
  },
  "espinho": {
   "group": "projeteis",
-  "frame": 40,
+  "frame": 48,
   "frames": 6
  },
  "evocacao": {

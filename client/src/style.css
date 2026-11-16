@@ -98,3 +98,5 @@ button.link { background: none; border: 0; color: var(--accent2); padding: 2px; 
   #roomBar { bottom: 190px; }
 }
 .classArt { width: 112px; height: 112px; justify-self: center; background-size: 400% 400%; background-position: 0 0; background-repeat: no-repeat; image-rendering: pixelated; }
+
+.logo { display: block; width: 112px; height: 112px; margin: 0 auto 4px; image-rendering: pixelated; }

@@ -48,9 +48,9 @@ ITEMS = [
     # ---------- Projéteis (loop) ----------
     fx("orbe-arcano", "projeteis", "a small glowing violet energy orb with a short violet trail pointing to the left behind it, flying to the right", LOOP, 48),
     fx("flecha", "projeteis", "a single horizontal wooden arrow pointing to the right with a glowing amber tip and a faint amber trail", LOOP, 48),
-    fx("espinho", "projeteis", "a sharp dark green thorn spike flying to the right with a faint green trail", LOOP, 40),
+    fx("espinho", "projeteis", "a large curved dark green thorn spike, thick at the base and sharp at the tip, pointing to the right, with a short glowing green trail behind it, filling most of the cell width", LOOP, 48),
     fx("lodo", "projeteis", "a blob of glowing sickly green slime flying to the right with dripping green trail", LOOP, 48),
-    fx("bola-de-fogo", "projeteis", "a small fireball flying to the right with orange and yellow flames trailing to the left", LOOP, 56),
+    fx("bola-de-fogo", "projeteis", "a large bright fireball with a white-yellow core, flying to the right, with long orange and red flames trailing to the left, filling most of the cell width", LOOP, 64),
     # ---------- Habilidades ----------
     fx("golpe-pesado", "habilidades", "a massive vertical downward sword slash with a violet shockwave ring at the bottom", GROW, 144),
     fx("giro-de-aco", "habilidades", "a full circular spinning blade ring of steel-white and violet slash arcs seen from above", GROW, 192),
@@ -61,7 +61,7 @@ ITEMS = [
     fx("lanca-arcana", "habilidades", "a long horizontal spear of violet arcane energy pointing right with a bright white core", GROW, 144),
     fx("explosao-arcana", "habilidades", "a big round arcane explosion of violet and cyan energy with a bright white center and flying sparks", GROW, 208),
     fx("barreira", "habilidades", "a round glowing cyan magic shield bubble dome with a hexagon pattern", GROW, 144),
-    fx("tiro-certeiro", "habilidades", "a glowing golden arrow streak pointing right with a bright impact flare at its tip", GROW, 128),
+    fx("tiro-certeiro", "habilidades", "a thin glowing golden energy arrow of light flying to the right with a long fading golden light trail behind it and a bright white star flare at its tip, sleek and sharp, made of light", GROW, 128),
     fx("chuva-de-flechas", "habilidades", "many glowing amber arrows falling diagonally from the sky onto a circular area, with small impact sparks", GROW, 192),
     fx("foco", "habilidades", "a golden crosshair target reticle with a ring and four ticks, rotating and shrinking toward the center", GROW, 112),
     # ---------- Eventos ----------

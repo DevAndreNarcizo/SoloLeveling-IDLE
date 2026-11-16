@@ -5,7 +5,7 @@ import { NPCS } from '../../shared/content.ts'
 import type { Ent, Fx, RoomInfo } from '../../shared/protocol.ts'
 import { assetUrl, hasAsset, monsterKey } from './assets.ts'
 import { onMessage, send } from './net.ts'
-import { COLOR, Effects, skillStyle, strikeColor } from './fx.ts'
+import { COLOR, Effects, fxKey, hasFx, preloadFx, shotFor, skillSprite, skillStyle, slashFor } from './fx.ts'
 
 // Formatos que a cena não carrega: ícones e fundo são da interface; 'props' só alimenta o montador de mapas.
 const UI_ONLY = new Set(['icon', 'wide', 'props'])
@@ -26,13 +26,13 @@ const TILE_COLORS: Record<string, [string, string]> = {
 }
 
 interface View {
-  box: Phaser.GameObjects.Container; sprite: Phaser.GameObjects.Image; bar?: Phaser.GameObjects.Graphics
+  box: Phaser.GameObjects.Container; sprite: Phaser.GameObjects.Image; bar?: Phaser.GameObjects.GameObject; barFill?: Phaser.GameObjects.Rectangle; barW: number
   tx: number; ty: number; row: number; ent: Ent; key: string; seen: number; sheet: boolean; sx: number
   /** Deslocamento do sprite dentro da caixa: investida, recuo e empurrão ao ser atingido. */
   ox: number; oy: number
   fly: number // altura de voo (0 = anda no chão)
   flashUntil: number // enquanto o clarão de impacto dura, a cor normal não volta
-  bubble?: Phaser.GameObjects.Ellipse // cúpula da Barreira
+  bubble?: Phaser.GameObjects.Image // cúpula da Barreira (sprite)
   dying?: boolean
   /** Animação de ataque em curso: até quando dura e qual quadro mostrar. */
   atkKey?: string; atkStart: number
@@ -51,6 +51,8 @@ export class GameScene extends Phaser.Scene {
   private snapN = 0
   private roomSnaps = 0
   private fx!: Effects
+  /** Última habilidade de cada ator: os acertos que vêm logo depois usam o sprite dela. */
+  private lastSkill = new Map<number, { name: string; at: number }>()
   onNearNpc: (npc: (typeof NPCS)[number] | null) => void = () => {}
   private nearNpc: (typeof NPCS)[number] | null = null
 
@@ -59,6 +61,7 @@ export class GameScene extends Phaser.Scene {
   preload() {
     for (const a of ASSETS) if (hasAsset(a.id) && !UI_ONLY.has(a.format)) this.load.image(a.id, assetUrl(a.id))
     for (const id of ATTACKS) this.load.image(`${id}-ataque`, `/assets/${id}-ataque.png`)
+    preloadFx(this)
   }
 
   create() {
@@ -179,7 +182,7 @@ export class GameScene extends Phaser.Scene {
       for (const n of NPCS) {
         const key = `npcs/${n.id}`
         const img = this.add.image(n.x, n.y, key).setScale(scaleFor(key)).setOrigin(0.5, 1).setDepth(n.y)
-        this.decor.push(this.add.ellipse(n.x, n.y - 2, img.displayWidth * 0.7, 10, 0x000000, 0.35).setDepth(n.y - 1), img)
+        this.decor.push(this.shadow(n.x, n.y - 2, img.displayWidth * 0.75, 12).setDepth(n.y - 1), img)
         // Respiração: sobe e desce um pixel, em passos (sem borrar o pixel art), cada NPC no seu ritmo.
         this.tweens.add({ targets: img, y: n.y - 1, duration: 900 + (n.x % 7) * 60, yoyo: true, repeat: -1, ease: 'Stepped' })
         this.decor.push(this.add.text(n.x, n.y - img.displayHeight - 10, n.name, { fontSize: '12px', color: '#ffcf5c', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5000))
@@ -190,7 +193,7 @@ export class GameScene extends Phaser.Scene {
 
   private textureFor(e: Ent): string {
     if (e.k === 'p') return `cacadores/${e.s}`
-    if (e.k === 'c') return 'objetos/resquicio'
+    if (e.k === 'c') return hasFx('resquicio') ? fxKey('resquicio') : 'objetos/resquicio'
     return monsterKey(e.s)
   }
 
@@ -214,20 +217,28 @@ export class GameScene extends Phaser.Scene {
       if (!v) {
         const key = this.textureFor(e)
         // Escala inteira: cada pixel do sprite vira um bloco nítido. Elites são um pouco maiores.
-        const sprite = this.add.image(0, 0, key).setScale(scaleFor(key) * (e.mk === 'elite' ? 1.25 : 1)).setOrigin(0.5, 1)
+        const sprite = this.add.image(0, 0, key).setScale(key.startsWith('fx:') ? 0.7 : scaleFor(key) * (e.mk === 'elite' ? 1.25 : 1)).setOrigin(0.5, key.startsWith('fx:') ? 0.75 : 1)
         const size = sprite.displayHeight
         const fly = e.k === 'm' && FLYERS.has(e.s) ? 16 : 0
         const box = this.add.container(e.x, e.y, [sprite])
         // Sombra no chão: prende o personagem ao cenário. Quem voa tem sombra menor.
-        if (e.k !== 'c') box.addAt(this.add.ellipse(0, -2, Math.min(sprite.displayWidth, size) * (fly ? 0.4 : 0.6), fly ? 7 : 10, 0x000000, fly ? 0.25 : 0.38), 0)
+        if (e.k !== 'c') box.addAt(this.shadow(0, -2, Math.min(sprite.displayWidth, size) * (fly ? 0.45 : 0.7), fly ? 9 : 13).setAlpha(fly ? 0.6 : 1), 0)
         if (e.k === 'e') sprite.setTint(0x8a6cff).setAlpha(0.88)
         if (e.n && e.k !== 'c') {
           const color = e.k === 'p' ? (e.me ? '#ffffff' : '#c9c3e6') : e.k === 'e' ? '#b79cff' : e.mk === 'chefe' ? '#ff6b7a' : e.mk === 'elite' ? '#ffcf5c' : '#d7d3e8'
           const label = e.k === 'p' && e.r ? `[${e.r}] ${e.g ? `<${e.g}> ` : ''}${e.n}` : e.n
           box.add(this.add.text(0, -size - 12 - fly, label, { fontSize: '11px', color, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5))
         }
-        v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX, ox: 0, oy: 0, fly, flashUntil: 0, h: size, atkStart: -1e9, atkKey: ATTACKS.has(key) ? `${key}-ataque` : undefined }
-        if (e.k !== 'c' && this.room?.kind !== 'city') { v.bar = this.add.graphics(); box.add(v.bar) }
+        v = { box, sprite, tx: e.x, ty: e.y, row: 0, ent: e, key, seen: this.snapN, sheet: this.textures.get(key).frameTotal > 2, sx: sprite.scaleX, ox: 0, oy: 0, fly, flashUntil: 0, h: size, barW: 0, atkStart: -1e9, atkKey: ATTACKS.has(key) ? `${key}-ataque` : undefined }
+        if (e.k !== 'c' && this.room?.kind !== 'city') {
+          // Barra de vida: moldura em sprite e, dentro dela, o preenchimento na cor de quem é.
+          const w = e.mk === 'chefe' ? 92 : 50, y = -v.h - 6 - v.fly
+          v.barFill = this.add.rectangle(-w / 2 + 3, y, w - 6, 4, e.k === 'm' ? 0xe5484d : e.k === 'e' ? 0x8b5cf6 : 0x5fd38a).setOrigin(0, 0.5)
+          v.barW = w - 6
+          const frame = hasFx('barra-de-vida') ? this.add.image(0, y, fxKey('barra-de-vida')).setDisplaySize(w, 10) : this.add.rectangle(0, y, w, 8, 0x000000, 0.7)
+          box.add([v.barFill, frame])
+          v.bar = frame
+        }
         this.views.set(e.id, v)
         // Quem aparece no meio da caçada surge de um rasgo de sombra; ecos sobem do chão.
         if (this.roomSnaps > 1 && this.room?.kind !== 'city' && (e.k === 'm' || e.k === 'e')) {
@@ -244,14 +255,10 @@ export class GameScene extends Phaser.Scene {
         if (this.time.now >= v.flashUntil) this.baseTint(v)
         v.sprite.setAlpha(e.hp <= 0 ? 0.35 : 1)
         // Barreira: cúpula visível enquanto o escudo durar
-        if (e.sh && !v.bubble) { const h = v.h; v.bubble = this.add.ellipse(0, -h / 2, h * 1.25, h * 1.3, COLOR.cyan, 0.14).setStrokeStyle(2, COLOR.cyan, 0.9); v.box.add(v.bubble); this.tweens.add({ targets: v.bubble, alpha: 0.55, duration: 600, yoyo: true, repeat: -1 }) }
+        if (e.sh && !v.bubble && hasFx('barreira')) { const h = v.h; v.bubble = this.add.image(0, -h / 2, fxKey('barreira'), 2).setDisplaySize(h * 1.4, h * 1.4).setAlpha(0.45); v.box.add(v.bubble); this.tweens.add({ targets: v.bubble, alpha: 0.8, duration: 600, yoyo: true, repeat: -1 }) }
         else if (!e.sh && v.bubble) { v.bubble.destroy(); v.bubble = undefined }
       }
-      if (v.bar) {
-        const w = e.mk === 'chefe' ? 90 : 46, y = -v.h - 4 - v.fly
-        v.bar.clear().fillStyle(0x000000, 0.7).fillRect(-w / 2 - 1, y - 1, w + 2, 6)
-          .fillStyle(e.k === 'm' ? 0xe5484d : e.k === 'e' ? 0x8b5cf6 : 0x5fd38a).fillRect(-w / 2, y, w * Math.max(0, e.hp / e.mhp), 4)
-      }
+      if (v.barFill) v.barFill.width = v.barW * Math.max(0, e.hp / e.mhp)
     }
     for (const [id, v] of this.views) {
       if (v.seen === this.snapN) continue
@@ -266,7 +273,7 @@ export class GameScene extends Phaser.Scene {
   private dieAnim(v: View) {
     v.dying = true
     const boss = v.ent.mk === 'chefe', h = v.h
-    v.sprite.setTintFill(0xffffff); v.bar?.destroy()
+    v.sprite.setTintFill(0xffffff); v.bar?.destroy(); v.barFill?.destroy()
     this.time.delayedCall(70, () => { if (v.sprite.active) v.sprite.setTintFill(v.ent.k === 'p' ? 0x7a1f2a : 0x2a1f4a) })
     this.fx.death(v.box.x, v.box.y, h, boss)
     this.tweens.add({ targets: v.sprite, scaleY: v.sprite.scaleY * 0.15, scaleX: v.sprite.scaleX * 1.25, alpha: 0, delay: boss ? 180 : 60, duration: boss ? 620 : 300, ease: 'Quad.easeIn', onComplete: () => v.box.destroy() })
@@ -277,12 +284,12 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: t, scale: 1, duration: 110, ease: 'Back.easeOut' })
     this.tweens.add({ targets: t, y: y - 38, alpha: 0, delay: life * 0.25, duration: life * 0.75, ease: 'Quad.easeIn', onComplete: () => t.destroy() })
   }
-  private burst(key: string, x: number, y: number, size: number) {
-    const img = this.add.image(x, y, key, 0).setDisplaySize(size, size).setDepth(8999)
-    this.tweens.addCounter({ from: 0, to: 3.99, duration: 380, onUpdate: (tw) => img.setFrame(Math.floor(tw.getValue() ?? 0)), onComplete: () => img.destroy() })
+  /** Sombra no chão (sprite), esticada para a largura de quem a projeta. */
+  private shadow(x: number, y: number, w: number, h: number): Phaser.GameObjects.Image | Phaser.GameObjects.Ellipse {
+    return hasFx('sombra') ? this.add.image(x, y, fxKey('sombra')).setDisplaySize(w, h) : this.add.ellipse(x, y, w, h * 0.8, 0x000000, 0.38)
   }
   /** Reação de quem apanha: clarão branco, empurrão, faíscas e o número do dano. */
-  private hitReact(f: Extract<Fx, { f: 'hit' }>, b: View, ang: number, color: number, lethal: boolean) {
+  private hitReact(f: Extract<Fx, { f: 'hit' }>, b: View, ang: number, lethal: boolean) {
     const h = b.h, bx = b.box.x, by = b.box.y - h * 0.5 - b.fly
     const boss = b.ent.mk === 'chefe', mine = !!b.ent.me, big = !!f.crit || !!f.skill
     if (!lethal && b.sprite.active) {
@@ -290,9 +297,7 @@ export class GameScene extends Phaser.Scene {
       this.time.delayedCall(60, () => { if (b.sprite.active && !b.dying) this.baseTint(b) })
       if (!boss) this.nudge(b, Math.cos(ang) * (big ? 9 : 5), Math.sin(ang) * (big ? 6 : 3), 60)
     }
-    this.fx.impact(bx, by, color, big ? 26 : 16, big ? 8 : 6)
-    this.fx.sparks(bx, by, b.ent.k === 'p' ? COLOR.red : color, big ? 9 : 4, big ? 100 : 60)
-    if (f.crit) this.fx.glow(bx, by, 110, COLOR.gold, 200, 0.7)
+    this.fx.hit(bx, by, !!f.crit, big)
     if (mine) this.cameras.main.shake(90, big ? 0.006 : 0.0025, false)
     else if (f.crit && this.views.get(f.from)?.ent.me) this.cameras.main.shake(70, 0.003, false)
     // Dano zero é golpe todo absorvido pela Barreira: mostra isso em vez de um "0".
@@ -301,31 +306,31 @@ export class GameScene extends Phaser.Scene {
     this.floatText(bx, by - h * 0.35, text, mine ? '#ff6b7a' : f.skill ? '#7df2ff' : f.crit ? '#ffcf5c' : '#ffffff', f.skill ? 20 : f.crit ? 19 : 13)
   }
 
-  /** O golpe em si: investida ou disparo, efeito e reação do alvo. */
+  /** O golpe em si: investida ou disparo, sprite do golpe e reação do alvo. */
   private strike(f: Extract<Fx, { f: 'hit' }>, a: View, b: View, lethal: boolean) {
     if (!a.box.active || !b.box.active) return
     const bh = b.h, bx = b.box.x, by = b.box.y - bh * 0.5 - b.fly
     const ax = a.box.x, ay = a.box.y - a.h * 0.5 - a.fly
     const ang = Math.atan2(b.box.y - a.box.y, b.box.x - a.box.x), cx = Math.cos(ang), cy = Math.sin(ang)
-    const boss = a.ent.mk === 'chefe', color = strikeColor(a.ent.k, a.ent.s, boss)
+    const boss = a.ent.mk === 'chefe'
+    // Habilidade de alvo único (Golpe Pesado, Perfurar, Lança Arcana, Tiro Certeiro) tem sprite próprio no alvo.
+    const last = this.lastSkill.get(a.ent.id), skillId = f.skill && last && this.time.now - last.at < 900 && skillStyle(last.name)?.kind === 'hit' ? skillSprite(last.name) : ''
     if (f.proj) {
-      // Disparo: recuo de quem atira, projétil com rastro e impacto só na chegada.
+      // Disparo: recuo de quem atira e projétil da classe ou da espécie; o impacto só na chegada.
       this.nudge(a, -cx * 5, -cy * 3, 60)
-      this.fx.glow(ax + cx * 14, ay + cy * 10, f.skill ? 90 : 50, color, 160, 0.8)
-      const key = f.proj === 'arrow' ? 'efeitos/flecha' : 'efeitos/projetil-arcano'
-      this.fx.projectile(key, ax + cx * 14, ay + cy * 10, bx, by, color, f.skill ? 54 : 36, () => {
-        if (f.skill) { this.fx.glow(bx, by, 150, color, 280, 0.9); this.fx.ring(b.box.x, b.box.y, 40, color, 300, 2) }
-        this.hitReact(f, b, ang, color, lethal)
+      this.fx.projectile(shotFor(f.proj, a.ent.s), ax + cx * 14, ay + cy * 10, bx, by, f.skill ? 56 : 40, () => {
+        if (skillId) this.fx.play(skillId, bx - cx * 30, by - cy * 20, { size: 150, rotation: ang, ms: 420 })
+        this.hitReact(f, b, ang, lethal)
       })
     } else {
-      // Corpo a corpo: investida na direção do alvo e corte em meia-lua sobre ele.
+      // Corpo a corpo: investida na direção do alvo e o sprite de golpe sobre ele, virado para o lado do golpe.
       const reach = boss ? 22 : 14
       this.nudge(a, cx * reach, cy * reach * 0.7, boss ? 110 : 70)
-      const size = (boss ? 58 : 34) * (f.skill ? 1.5 : f.crit ? 1.2 : 1)
-      this.fx.slash(bx - cx * 8, by - cy * 6, ang, color, size, f.skill ? 1.25 : 1)
-      if (f.skill) { this.fx.slash(bx - cx * 8, by - cy * 6, ang + Math.PI, color, size * 0.8); this.fx.glow(bx, by, 130, color, 240, 0.8) }
-      if (boss) { this.fx.ring(b.box.x, b.box.y, 46, COLOR.red, 300, 2); this.cameras.main.shake(100, 0.004, false) }
-      this.hitReact(f, b, ang, color, lethal)
+      const size = (boss ? 130 : 76) * (f.crit ? 1.2 : 1)
+      if (skillId) this.fx.play(skillId, bx, by, { size: 150, rotation: skillId === 'perfurar' ? ang : 0, ms: 420 })
+      else this.fx.play(slashFor(a.ent.k, a.ent.s, boss), bx - cx * 6, by - cy * 4, { size, rotation: ang, flipX: cx < 0 && Math.abs(cx) > Math.abs(cy), ms: 280 })
+      if (boss) this.cameras.main.shake(100, 0.004, false)
+      this.hitReact(f, b, ang, lethal)
     }
   }
 
@@ -334,11 +339,8 @@ export class GameScene extends Phaser.Scene {
       const a = this.views.get(f.from), b = this.views.get(f.to)
       if (!b) return
       const lethal = dying.has(f.to)
-      const bh = b.h, bx = b.box.x, by = b.box.y - bh * 0.5 - b.fly
-      if (!a) { this.hitReact(f, b, 0, COLOR.white, lethal); return }
-      const ax = a.box.x, ay = a.box.y - a.h * 0.5 - a.fly
+      if (!a) { this.hitReact(f, b, 0, lethal); return }
       const ang = Math.atan2(b.box.y - a.box.y, b.box.x - a.box.x), cx = Math.cos(ang), cy = Math.sin(ang)
-      const boss = a.ent.mk === 'chefe', color = strikeColor(a.ent.k, a.ent.s, boss)
       // Parado, o atacante vira para o alvo (a linha da folha é a direção).
       a.row = Math.abs(cx) > Math.abs(cy) ? (cx < 0 ? 1 : 2) : cy < 0 ? 3 : 0
       // Com folha de ataque, o personagem prepara o golpe e o impacto só acontece no quadro certo.
@@ -348,6 +350,7 @@ export class GameScene extends Phaser.Scene {
       this.strike(f, a, b, lethal)
     } else if (f.f === 'skill') {
       const v = this.views.get(f.id)
+      this.lastSkill.set(f.id, { name: f.name, at: this.time.now })
       if (v) {
         this.floatText(v.box.x, v.box.y - v.h - 14, f.name, skillStyle(f.name)?.kind === 'buff' ? '#ffcf5c' : '#7df2ff', 14, 1000)
         this.fx.cast(v.box.x, v.box.y, v.h, f.name)
@@ -356,13 +359,13 @@ export class GameScene extends Phaser.Scene {
     } else if (f.f === 'heal') {
       const v = this.views.get(f.to); if (v) { this.fx.heal(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 50, `+${f.amount}`, '#5fd38a') }
     } else if (f.f === 'level') {
-      const v = this.views.get(f.id); if (v) { this.fx.levelUp(v.box.x, v.box.y); this.burst('efeitos/subir-nivel', v.box.x, v.box.y - 26, 96); this.floatText(v.box.x, v.box.y - 90, 'SUBIU DE NÍVEL', '#ffcf5c', 18, 1400) }
+      const v = this.views.get(f.id); if (v) { this.fx.levelUp(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 90, 'SUBIU DE NÍVEL', '#ffcf5c', 18, 1400) }
     } else if (f.f === 'die') {
       // Caçador que cai continua na sala (volta depois): só o aviso e as faíscas.
       const v = this.views.get(f.id)
-      if (v && v.ent.k === 'p') { this.fx.sparks(v.box.x, v.box.y - 40, COLOR.red, 12, 90, 500); this.fx.ring(v.box.x, v.box.y, 44, COLOR.red, 420, 3); this.floatText(v.box.x, v.box.y - 80, 'CAIU', '#ff6b7a', 16, 1200) }
+      if (v && v.ent.k === 'p') { this.fx.play('golpe-chefe', v.box.x, v.box.y - v.h / 2, { size: v.h * 1.2, ms: 360 }); this.floatText(v.box.x, v.box.y - 80, 'CAIU', '#ff6b7a', 16, 1200) }
     } else if (f.f === 'extract') {
-      this.fx.extract(f.x, f.y, f.ok); this.burst('efeitos/evocacao', f.x, f.y - 16, 84)
+      this.fx.extract(f.x, f.y, f.ok)
       this.floatText(f.x, f.y - 40, f.ok ? 'ECO EVOCADO' : 'falhou', f.ok ? '#b79cff' : '#9a93b5', f.ok ? 16 : 12)
     }
   }
