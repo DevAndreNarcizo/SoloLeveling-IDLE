@@ -3,7 +3,7 @@ import {
   ARENA, ATTRS, ATTR_HELP, ATTR_NAMES, AUTO_EXTRACT_LEVEL, BAG_EXPANSIONS, CLASSES, CLASS_IDS, CRYSTAL_PACKS, ECHO_FUSE_COUNT, ECHO_LIMIT, ECHO_TIERS,
   ENCHANT_CHANCE, GUILD, MARKET, MAX_ENCHANT, MAX_LEVEL, MONSTERS, PARTY_MAX, PREMIUM, PROMOTIONS, RARITY_INFO, RIFTS, SHOP, SKILLS, SLOTS,
   SLOT_NAMES, TALENTS, TALENT_MAX, TALENT_PATHS, TALENT_TIER_POINTS, bagSize, echoFuseCost, echoStats, enchantCost, expToNext, itemName,
-  itemStat, pathPoints, rankOf, sellPrice, talentPoints, talentResetCost, type ClassId, type Item, type PremiumId, type ShopId, type Slot, type TalentPath, HEAL, healCost } from '../../shared/content.ts'
+  itemStat, pathPoints, rankOf, sellPrice, talentPoints, talentResetCost, type ClassId, type Item, type PremiumId, type ShopId, type Slot, type TalentPath } from '../../shared/content.ts'
 import type { ChatChannel, InviteKind, ServerMsg } from '../../shared/protocol.ts'
 import { icon } from './assets.ts'
 import { send, state } from './net.ts'
@@ -28,7 +28,6 @@ const inCity = () => state.room?.kind === 'city'
 
 const PANELS: Record<string, { title: string; key?: string; icon: string; render: () => Node[] }> = {
   status: { title: 'Status', key: 'c', icon: 'icones/menu/status', render: renderStatus },
-  cura: { title: 'Curandeira', icon: 'icones/atributos/vit', render: renderHeal },
   mochila: { title: 'Mochila', key: 'i', icon: 'icones/menu/mochila', render: renderBag },
   ecos: { title: 'Ecos', key: 'h', icon: 'icones/menu/ecos', render: renderEchoes },
   talentos: { title: 'Talentos e habilidades', key: 'k', icon: 'icones/atributos/int', render: renderTalents },
@@ -296,18 +295,6 @@ function renderForge(): Node[] {
   }
   return out
 }
-function renderHeal(): Node[] {
-  const c = state.char!, d = state.derived!
-  const hp = c.hp ?? d.maxHp, missing = d.maxHp - hp, cost = healCost(c.level, missing)
-  const out: Node[] = [
-    h('p', { class: 'muted' }, `Você sai das fendas com a vida que sobrou (quem cai volta com ${Math.round(HEAL.afterFallPct * 100)}%). Na cidade ela volta sozinha, devagar; a Irmã Clara cura na hora.${c.level < HEAL.freeBelowLevel ? ` Grátis até o nível ${HEAL.freeBelowLevel - 1}.` : ''}`),
-    h('div', { class: 'line' }, icon('icones/atributos/vit', 'Vida'),
-      h('div', { class: 'grow' }, h('b', {}, `Vida ${fmt(hp)} / ${fmt(d.maxHp)}`), h('div', { class: 'bar hp', title: 'Vida' }, h('i', { style: `width:${Math.round((hp / d.maxHp) * 100)}%` })))),
-  ]
-  if (!inCity()) out.push(h('p', { class: 'bad' }, 'A curandeira só atende na cidade.'))
-  out.push(btn(missing <= 0 ? 'Vida cheia' : cost ? `Curar · ${fmt(cost)} ouro` : 'Curar · grátis', () => send({ t: 'heal' }), { disabled: !inCity() || missing <= 0 || c.gold < cost }))
-  return out
-}
 function renderShop(): Node[] {
   const c = state.char!
   const out: Node[] = inCity() ? [] : [h('p', { class: 'bad' }, 'A loja só atende na cidade.')]
@@ -505,7 +492,6 @@ export function handleUi(m: ServerMsg) {
     case 'trade': if (m.trade) { if (open !== 'troca') openPanel('troca'); else renderPanel() } else if (open === 'troca') { open = null; $('panel').classList.add('hidden') } break
     case 'guild': if (open === 'guilda') renderPanel(); break
     case 'market': if (open === 'mercado') renderPanel(); break
-    case 'healed': toast(m.cost ? `Curado (+${fmt(m.amount)} de vida) por ${fmt(m.cost)} de ouro.` : `Curado (+${fmt(m.amount)} de vida).`); break
     case 'order': if (m.status === 'pending') modal('Pedido criado', m.text); break
   }
 }

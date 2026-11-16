@@ -426,12 +426,12 @@ export class World {
     const c = s.char!
     if (s.hunt) return this.err(s, 'A curandeira só atende na cidade.')
     const max = derive(c).maxHp, missing = c.hp === undefined ? 0 : max - c.hp
-    if (missing <= 0) return this.err(s, 'Sua vida já está cheia.')
+    if (missing <= 0) return s.send({ t: 'healed', amount: 0, cost: 0 })
     const cost = healCost(c.level, missing)
     if (c.gold < cost) return this.err(s, `A cura custa ${cost} de ouro.`)
     c.gold -= cost; delete c.hp
     this.sendChar(s); s.send({ t: 'healed', amount: missing, cost })
-    this.log(s, cost ? `Irmã Clara curou ${missing} de vida por ${cost} de ouro.` : `Irmã Clara curou ${missing} de vida.`, 'good')
+    this.log(s, `Irmã Clara curou ${missing} de vida.`, 'good')
   }
 
   private async finishHunt(h: Hunt) {

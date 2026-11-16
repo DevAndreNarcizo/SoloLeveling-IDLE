@@ -411,10 +411,10 @@ export const SKILLS: Record<ClassId, SkillDef[]> = {
 
 // ---------- Grupo, arena, guilda, mercado ----------
 // ---------- Curandeira ----------
-/** Na cidade a vida volta sozinha (0,5% por segundo: cheia em ~3 min). A curandeira enche na hora. */
-export const HEAL = { cityRegenPerSec: 0.005, freeBelowLevel: 10, goldPerHp: 0.1, afterFallPct: 0.25 }
-/** Preço da cura: grátis para iniciantes; depois, 1 ouro a cada 10 de vida que falta. */
-export const healCost = (level: number, missing: number) => level < HEAL.freeBelowLevel ? 0 : Math.ceil(missing * HEAL.goldPerHp)
+/** Na cidade a vida volta sozinha (0,5% por segundo: cheia em ~3 min). A curandeira enche na hora, só falando com ela. */
+export const HEAL = { cityRegenPerSec: 0.005, goldPerHp: 0, afterFallPct: 0.25 }
+/** Preço da cura: hoje grátis (goldPerHp = 0). Para cobrar, suba goldPerHp (ex.: 0.1 = 1 ouro a cada 10 de vida). */
+export const healCost = (_level: number, missing: number) => Math.ceil(missing * HEAL.goldPerHp)
 
 export const PARTY_MAX = 4
 export const PARTY_SHARE = 0.75 // parte da EXP e do ouro que cada membro recebe em grupo

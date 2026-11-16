@@ -70,6 +70,8 @@ export class GameScene extends Phaser.Scene {
   private lastSkill = new Map<number, { name: string; at: number }>()
   onNearNpc: (npc: (typeof NPCS)[number] | null) => void = () => {}
   private nearNpc: (typeof NPCS)[number] | null = null
+  /** NPC que o jogador tocou: ao chegar perto, fala com ele sozinho. */
+  private talkTo: (typeof NPCS)[number] | null = null
   /** NPCs da cidade na tela: para virar para o jogador, falar e mostrar emotes. */
   private npcViews: { def: (typeof NPCS)[number]; img: Phaser.GameObjects.Sprite; top: number; nextEmote: number; bubble?: Phaser.GameObjects.GameObject[] }[] = []
 
@@ -109,12 +111,19 @@ export class GameScene extends Phaser.Scene {
         if (v.ent.k === 'p' && !v.ent.me && v.ent.n && Math.hypot(v.box.x - w.x, v.box.y - 40 - w.y) < 44) { this.game.events.emit('player', v.ent.n); return }
       }
       const npc = NPCS.find((n) => Math.hypot(n.x - w.x, n.y - 48 - w.y) < 56)
+      // Tocar num NPC: o caçador vai até ele e já fala (abre a loja, cura, abre os portais...).
       this.dest = npc ? { x: npc.x, y: npc.y + 46 } : { x: w.x, y: w.y }
+      this.talkTo = npc ?? null
     })
     onMessage((m) => {
       if (m.t === 'room') this.enterRoom(m.room, m.you)
       else if (m.t === 'snap') this.applySnap(m.ents, m.fx)
-      else if (m.t === 'healed') { const v = this.views.get(this.you); if (v) { this.fx.heal(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 60, `+${m.amount}`, '#5fd38a', 16, 1200) } }
+      else if (m.t === 'healed') {
+        const healer = this.npcViews.find((o) => o.def.panel === 'cura')
+        if (healer) this.say(healer, m.amount ? 'Pronto, novo em folha. Boa caçada!' : 'Você já está bem! Volte quando precisar.')
+        const v = this.views.get(this.you)
+        if (v && m.amount) { this.fx.heal(v.box.x, v.box.y); this.floatText(v.box.x, v.box.y - 60, `+${m.amount}`, '#5fd38a', 16, 1200) }
+      }
     })
     this.game.events.emit('scene-ready')
   }
@@ -133,7 +142,9 @@ export class GameScene extends Phaser.Scene {
       if (!this.nearNpc) return
       const v = this.npcViews.find((o) => o.def === this.nearNpc)
       if (v) this.hop(v.img)
-      this.game.events.emit('npc', this.nearNpc.panel)
+      // Falar já faz o serviço: a curandeira cura na hora; os outros abrem o que oferecem.
+      if (this.nearNpc.panel === 'cura') send({ t: 'heal' })
+      else this.game.events.emit('npc', this.nearNpc.panel)
     }
     else if (this.room?.kind === 'hunt') send({ t: 'extract' })
   }
@@ -469,10 +480,10 @@ export class GameScene extends Phaser.Scene {
         dx = (k.D.isDown || k.RIGHT.isDown ? 1 : 0) - (k.A.isDown || k.LEFT.isDown ? 1 : 0)
         dy = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0)
       }
-      if (dx || dy) this.dest = null
+      if (dx || dy) { this.dest = null; this.talkTo = null }
       else if (this.dest && me) {
         const ddx = this.dest.x - me.tx, ddy = this.dest.y - me.ty, d = Math.hypot(ddx, ddy)
-        if (d < 10) this.dest = null; else { dx = ddx / d; dy = ddy / d }
+        if (d < 10) { this.dest = null; if (this.talkTo) { this.nearNpc = this.talkTo; this.talkTo = null; this.interact() } } else { dx = ddx / d; dy = ddy / d }
       }
       const key = `${dx.toFixed(2)},${dy.toFixed(2)}`
       if (key !== this.lastMove) { this.lastMove = key; send({ t: 'move', dx, dy }) }
